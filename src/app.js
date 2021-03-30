@@ -1,4 +1,5 @@
 const config = {
+    instanceIndicator: "rapid--",
 	moduleName: "components",
     requestEndpoint: "_components"
 };
@@ -6,11 +7,12 @@ const config = {
 const {existsSync, readdirSync, readFileSync} = require("fs");
 const {join} = require("path");
 
-let componentsData;
+// Components data object containing each component in a map.
+let componentsData = new Map();
 
 /**
  * Render components into markup data accordingly.
- * @param {String} data markup data
+ * @param {String} data Markup data
  * @returns {String} Markup with components rendered into
  */
 function render(data) {
@@ -18,43 +20,58 @@ function render(data) {
 }
 
 function init(coreAppInstance) {
-    coreAppInstance.initFeature(__dirname, config.moduleName, config);
+    coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
 
     // Read components directory
-    const componentsDirPath = join(coreAppInstance.webPath(), coreAppInstance.config("componentsDir"));
-    if(existsSync(componentsDirPath)) {
-        readdirSync(componentsDirPath, {
-            withFileTypes: true
-        })
-        .filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
-        .forEach(dir => {
-            const componentDirPath = join(componentsDirPath, dir.name);
+    const retrieveComponentSubData = (componentDirPath, extension) => {
+        return coreAppInstance.finish(extension, existsSync(`${componentDirPath}.${extension}`) ? String(readFileSync(`${componentDirPath}.${extension}`)).trim() : null);
+    };
 
-            //const style = readFileSync();
+    const componentsDirPath = join(coreAppInstance.webPath(), coreAppInstance.config("componentsDirPath"));
+    existsSync(componentsDirPath) && readdirSync(componentsDirPath, {
+        withFileTypes: true
+    })
+    .filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
+    .forEach(dir => {
+        const componentDirPath = join(componentsDirPath, dir.name, `_${dir.name}`);
+        
+        const markup = retrieveComponentSubData(componentDirPath, "html");
+        if(!markup || markup.length == 0) {
+            coreAppInstance.log(`Skipping render of '${dir.name}' component as mandatory markup file does not exist or is empty`);
+            return;
+        }
+        const style = retrieveComponentSubData(componentDirPath, "css");
+        const script = retrieveComponentSubData(componentDirPath, "js");
 
-            /* coreAppInstance.route("get", componentDirPath, _ => {
-                throw 403;
-            }); */
+        componentsData.set(dir.name, {
+            markup: markup,
+            style: style,
+            script: script
         });
-    }
+    });
 
     // Add render finisher
-	coreAppInstance.finish("html", data => {
-        return render(data, coreAppInstance);
-    });
+	coreAppInstance.finisher("html", render);
     
 	// Add POST route to retrieve specific content
 	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
-		if(!body.content) {
-			body.content = config.defaultContentName;
+        if(!body.components || !Array.isArray(body.components) || body.components.length == 0) {
+			return null;
 		}
+        
+		let selectedComponentsData = {};
+        body.components.forEach(component => {
+            if(!componentsData.has(component)) {
+                return;
+            }
 
-		const contentFilePath = join(coreAppInstance.webPath(), body.pathname, `:${body.content}.html`);
-		if(!existsSync(contentFilePath)) {
-			throw 404;
-		}
+            selectedComponentsData[component] = componentsData.get(component);
+        });
 
-		return String(readFileSync(contentFilePath));
+        if(Object.keys(selectedComponentsData).length === 0) {
+            return null;
+        }
+		return selectedComponentsData;
 	});
 }
 
