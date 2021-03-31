@@ -10,21 +10,52 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData = new Map();
 
-/**
- * Render components into markup data accordingly.
- * @param {String} data Markup data
- * @returns {String} Markup with components rendered into
- */
-function render(data) {
-	return data;
-}
+const translation = {
+    "connectedCallback": "connected",
+    "disconnectedCallback": "disconnected",
+    "adoptedCallback": "moved"
+};
 
 function init(coreAppInstance) {
     coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
 
     // Read components directory
+    /**
+     * Retrieve file contents of a certain component file from a given directory.
+     * @param {String} componentDirPath Component direcotry path
+     * @param {String} extension File extension to read
+     * @returns {String} Component file data
+     */
     const retrieveComponentSubData = (componentDirPath, extension) => {
-        return coreAppInstance.finish(extension, existsSync(`${componentDirPath}.${extension}`) ? String(readFileSync(`${componentDirPath}.${extension}`)).trim() : null);
+        if(existsSync(`${componentDirPath}.${extension}`)) {
+            const data = String(readFileSync(`${componentDirPath}.${extension}`)).trim();
+            if(data.length == 0) {
+                return null;
+            }
+
+            return coreAppInstance.finish(extension, data);
+        }
+        return null;
+    };
+    /**
+     * Translate simplified script syntax to valid ECMA script syntax.
+     * @helper
+     * @param {String} script Simplified syntax script
+     * @returns {String} Valid syntax script
+     */
+    const translateScript = script => {
+        // Translate lifecycle methods
+        for(let key in translation) {
+            script = script.replace(new RegExp(`(^|\\s)::${translation[key]}\\s*\\(`, "g"), `$1${key}(`);
+        }
+
+        // Translate ordinary methods
+        script = script.replace(/(^|\}|\s)((const|let|var)|function)\s+([a-zA-Z_][a-zA-Z_0-9]*)(\s*=\s*function)?\s*\(/g, "$1$4(");
+        script = script.replace(/(^|\}|\s)(const|let|var)\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*=\s*(_|(([a-zA-Z_][a-zA-Z_0-9]*)|\((((?!\))(\s|.))*)\)))\s*=>/g, "$1$3($6$7)");
+
+        // TODO: How to handle private vars?
+
+        return script;
     };
 
     const componentsDirPath = join(coreAppInstance.webPath(), coreAppInstance.config("componentsDirPath"));
@@ -36,12 +67,16 @@ function init(coreAppInstance) {
         const componentDirPath = join(componentsDirPath, dir.name, `_${dir.name}`);
         
         const markup = retrieveComponentSubData(componentDirPath, "html");
-        if(!markup || markup.length == 0) {
+        if(!markup) {
             coreAppInstance.log(`Skipping render of '${dir.name}' component as mandatory markup file does not exist or is empty`);
             return;
         }
-        const style = retrieveComponentSubData(componentDirPath, "css");
-        const script = retrieveComponentSubData(componentDirPath, "js");
+
+        let style = retrieveComponentSubData(componentDirPath, "css");
+        !style && (style = retrieveComponentSubData(componentDirPath, "scss")); // Try SCSS if no related CSS file found
+
+        let script = retrieveComponentSubData(componentDirPath, "js");
+        script && (script = translateScript(script));
 
         componentsData.set(dir.name, {
             markup: markup,
@@ -50,9 +85,6 @@ function init(coreAppInstance) {
         });
     });
 
-    // Add render finisher
-	coreAppInstance.finisher("html", render);
-    
 	// Add POST route to retrieve specific content
 	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
         if(!body.components || !Array.isArray(body.components) || body.components.length == 0) {
