@@ -10,10 +10,19 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData = new Map();
 
-const translation = {
-    "connectedCallback": "connected",
-    "disconnectedCallback": "disconnected",
-    "adoptedCallback": "moved"
+const scriptTranslation = {
+    lifecyclePrefix: "::",
+    lifecycle: {
+        "connectedCallback": "connected",
+        "disconnectedCallback": "disconnected",
+        "adoptedCallback": "moved"
+    },
+    attributeChangedCallback: {
+        name: "addChangeListener",
+        oldValueName: "oldValue",
+        newValueName: "newValue",
+    }
+
 };
 
 function init(coreAppInstance) {
@@ -44,17 +53,75 @@ function init(coreAppInstance) {
      * @returns {String} Valid syntax script
      */
     const translateScript = script => {
+        // Remove comments
+        script = script.replace(/((^|([^\\]))\/\/.*)|((^|[^\\])\/\*((?!\*\/)(\s|.))*(\*\/)?)/g, "$3");
+
         // Translate lifecycle methods
-        for(let key in translation) {
-            script = script.replace(new RegExp(`(^|\\s)::${translation[key]}\\s*\\(`, "g"), `$1${key}(`);
+        for(let key in scriptTranslation.lifecycle) {
+            script = script.replace(new RegExp(`(^|\\s)${scriptTranslation.lifecyclePrefix}${scriptTranslation.lifecycle[key]}\\s*\\(`, "g"), `$1${key}(`);
         }
 
-        // Translate ordinary methods
-        script = script.replace(/(^|\}|\s)((const|let|var)|function)\s+([a-zA-Z_][a-zA-Z_0-9]*)(\s*=\s*function)?\s*\(/g, "$1$4(");
-        script = script.replace(/(^|\}|\s)(const|let|var)\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*=\s*(_|(([a-zA-Z_][a-zA-Z_0-9]*)|\((((?!\))(\s|.))*)\)))\s*=>/g, "$1$3($6$7)");
+        let listenerCases = "";
 
-        // TODO: How to handle private vars?
+        // Translate attribute change listeners
+        let startIndex;
+        while((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.attributeChangedCallback.name}\\s*\\(`))) > -1) {    // TODO: Extend regex
+            let open = 1;
+            let block = script.slice(startIndex);
+            let endIndex = block.indexOf("{") + 1;
+            let openedString = null;
+            do {
+                const character = block.slice(endIndex).match(/([^\\]("|`|'))|\{|\}/)[0];
+                endIndex += block.slice(endIndex).indexOf(character) + 1;
+                if(character == "{") {
+                    open++;
+                    continue;
+                }
+                if(character == "}") {
+                    open--;
+                    continue;
+                }
+                if(["\"", "'", "`"].includes(character.slice(1))) {
+                    if(openedString === null) {
+                        openedString = character;
+                    } else if(character == openedString) {
+                        openedString = null;
+                    }
+                    continue;
+                }
+            } while(open > 0);
+            
+            const listener = script.slice(startIndex, startIndex + endIndex);
+            script = script.replace(new RegExp(`${listener.replace(/(\{|\}|\(|\))/g, "\\$1")}(\\s*\\)(\\s*;)?)?`), "");
 
+            const attribute = listener.match(/("|'|`)\s*[a-zA-Z0-9_-]+\s*\1/)[0].slice(1, -1).trim();
+            let body = listener.slice(listener.indexOf("{") + 1, -1).trim();
+
+            let args = listener.slice(0, listener.indexOf("{")).match(/[a-zA-Z_][a-zA-Z0-9_]*\s*=>|\(\s*[a-zA-Z_][a-zA-Z0-9_]*(\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*)*\s*\)/);
+            if(args) {
+                args = args[0].match(/[a-zA-Z_][a-zA-Z0-9_]*/g);
+                
+                body = body.replace(new RegExp(`([^a-zA-Z0-9_])${args[0]}([^a-zA-Z0-9_])`), `$1${scriptTranslation.attributeChangedCallback.oldValueName}$2`);
+                args[1] && (body = body.replace(args[1], scriptTranslation.attributeChangedCallback.newValueName));
+            }
+
+            listenerCases += `
+                case "${attribute}":
+                    ${body}
+                    break;
+            `;
+        }
+        
+        script += `
+            attributeChangedCallback(name, ${scriptTranslation.attributeChangedCallback.name}, ${scriptTranslation.attributeChangedCallback.name}) {
+                switch(name) {
+                    ${listenerCases}
+                }
+            }
+        `;
+
+        console.log(script);
+        
         return script;
     };
 
@@ -64,6 +131,7 @@ function init(coreAppInstance) {
     })
     .filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
     .forEach(dir => {
+        // Process each component as present in file system
         const componentDirPath = join(componentsDirPath, dir.name, `_${dir.name}`);
         
         const markup = retrieveComponentSubData(componentDirPath, "html");

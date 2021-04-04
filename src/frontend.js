@@ -24,16 +24,10 @@ window.MutationObserver || window.WebKitMutationObserver;
 
             const template = document.createElement("template");
             template.id = name;
-            template.innerHTML = component.markup;
-
-            if(component.style) {
-                const style = document.createElement("style");
-                style.textContent = component.style;
-                template.insertBefore(style, template.firstChild);
-            }
+            template.innerHTML = `${component.style ? `<style>${component.style}</style>` : ""}${component.markup}`;
 
             document.head.appendChild(template);
-            
+
             eval(`
                 customElements.define("${name}", class extends HTMLElement {
                     constructor() {
