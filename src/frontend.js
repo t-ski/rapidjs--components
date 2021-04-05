@@ -20,25 +20,29 @@ window.MutationObserver || window.WebKitMutationObserver;
     .then(components => {
         for(let name in components) {
             const component = components[name];
-            name = `${config.instanceIndicator}${name}`;
+            const instanceName = `${config.instanceIndicator}${name}`;
 
             const template = document.createElement("template");
-            template.id = name;
+            template.id = instanceName;
             template.innerHTML = `${component.style ? `<style>${component.style}</style>` : ""}${component.markup}`;
 
             document.head.appendChild(template);
+            
+            try {
+                eval(`
+                    customElements.define("${instanceName}", class extends HTMLElement {
+                        constructor() {
+                            super();
 
-            eval(`
-                customElements.define("${name}", class extends HTMLElement {
-                    constructor() {
-                        super();
-
-                        const shadowRoot = this.attachShadow({mode: "closed"});
-                        shadowRoot.appendChild(document.querySelector("template#${name}").content.cloneNode(true));
-                    }
-                    ${component.script}
-                });
-            `);
+                            const shadowRoot = this.attachShadow({mode: "closed"});
+                            shadowRoot.appendChild(document.querySelector("template#${instanceName}").content.cloneNode(true));
+                        }
+                        ${component.script || ""}
+                    });
+                `);
+            } catch(err) {
+                throw new EvalError(`An error occurred executing a component script:\n"${err.message}" at '_${name}.js`);
+            }
         }
     });
 })).observe(document, {

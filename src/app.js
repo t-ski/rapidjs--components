@@ -61,11 +61,11 @@ function init(coreAppInstance) {
             script = script.replace(new RegExp(`(^|\\s)${scriptTranslation.lifecyclePrefix}${scriptTranslation.lifecycle[key]}\\s*\\(`, "g"), `$1${key}(`);
         }
 
-        let listenerCases = "";
-
         // Translate attribute change listeners
+        let listenerCases = "";
+        let listenedAttributes = [];
         let startIndex;
-        while((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.attributeChangedCallback.name}\\s*\\(`))) > -1) {    // TODO: Extend regex
+        while((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.attributeChangedCallback.name}\\s*\\(`))) > -1) {    // TODO: Extend regex?
             let open = 1;
             let block = script.slice(startIndex);
             let endIndex = block.indexOf("{") + 1;
@@ -110,18 +110,19 @@ function init(coreAppInstance) {
                     ${body}
                     break;
             `;
+
+            listenedAttributes.push(attribute);
         }
         
         script += `
-            attributeChangedCallback(name, ${scriptTranslation.attributeChangedCallback.name}, ${scriptTranslation.attributeChangedCallback.name}) {
-                switch(name) {
+            attributeChangedCallback(attr, ${scriptTranslation.attributeChangedCallback.oldValueName}, ${scriptTranslation.attributeChangedCallback.newValueName}) {
+                switch(attr) {
                     ${listenerCases}
                 }
             }
+            static get observedAttributes() {return [${listenedAttributes.map(attr => `"${attr}"`).join(",")}];}
         `;
-
-        console.log(script);
-        
+            
         return script;
     };
 
