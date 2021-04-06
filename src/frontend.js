@@ -34,8 +34,8 @@ window.MutationObserver || window.WebKitMutationObserver;
                         constructor() {
                             super();
 
-                            const shadowRoot = this.attachShadow({mode: "closed"});
-                            shadowRoot.appendChild(document.querySelector("template#${instanceName}").content.cloneNode(true));
+                            this.${config.shadowRootAlias} = this.attachShadow({mode: "closed"});
+                            this.${config.shadowRootAlias}.appendChild(document.querySelector("template#${instanceName}").content.cloneNode(true));
                         }
                         ${component.script || ""}
                     });

@@ -1,43 +1,34 @@
 const config = {
     instanceIndicator: "rapid--",
 	moduleName: "components",
-    requestEndpoint: "_components"
+    requestEndpoint: "_components",
+    shadowRootAlias: "COMPONENT"
 };
 
 const {existsSync, readdirSync, readFileSync} = require("fs");
 const {join} = require("path");
 
 // Components data object containing each component in a map.
-let componentsData = new Map();
+let componentsData;
 
-const scriptTranslation = {
-    lifecyclePrefix: "::",
-    lifecycle: {
-        "connectedCallback": "connected",
-        "disconnectedCallback": "disconnected",
-        "adoptedCallback": "moved"
-    },
-    attributeChangedCallback: {
-        name: "addChangeListener",
-        oldValueName: "oldValue",
-        newValueName: "newValue",
-    }
-
-};
-
-function init(coreAppInstance) {
-    coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
-
-    // Read components directory
+function readComponentsData(coreAppInstance) {
     /**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
      * @returns {String} Component file data
      */
-    const retrieveComponentSubData = (componentDirPath, extension) => {
-        if(existsSync(`${componentDirPath}.${extension}`)) {
-            const data = String(readFileSync(`${componentDirPath}.${extension}`)).trim();
+     const retrieveComponentSubData = (componentDirPath, extension) => {
+        const subPath = `${componentDirPath}.${extension}`;
+        if(existsSync(subPath)) {
+            let data;
+            try {
+                data = coreAppInstance.read(extension, subPath);
+            } catch(err) {
+                console.log(err)
+                data = String(readFileSync(subPath)).trim();
+            }
+
             if(data.length == 0) {
                 return null;
             }
@@ -53,6 +44,21 @@ function init(coreAppInstance) {
      * @returns {String} Valid syntax script
      */
     const translateScript = script => {
+        const scriptTranslation = {
+            lifecyclePrefix: "::",
+            lifecycle: {
+                "connectedCallback": "connected",
+                "disconnectedCallback": "disconnected",
+                "adoptedCallback": "moved"
+            },
+            attributeChangedCallback: {
+                name: "addChangeListener",
+                oldValueName: "oldValue",
+                newValueName: "newValue",
+            }
+        
+        };
+
         // Remove comments
         script = script.replace(/((^|([^\\]))\/\/.*)|((^|[^\\])\/\*((?!\*\/)(\s|.))*(\*\/)?)/g, "$3");
 
@@ -122,9 +128,11 @@ function init(coreAppInstance) {
             }
             static get observedAttributes() {return [${listenedAttributes.map(attr => `"${attr}"`).join(",")}];}
         `;
-            
+
         return script;
     };
+
+    let data = new Map();
 
     const componentsDirPath = join(coreAppInstance.webPath(), coreAppInstance.config("componentsDirPath"));
     existsSync(componentsDirPath) && readdirSync(componentsDirPath, {
@@ -147,15 +155,26 @@ function init(coreAppInstance) {
         let script = retrieveComponentSubData(componentDirPath, "js");
         script && (script = translateScript(script));
 
-        componentsData.set(dir.name, {
+        data.set(dir.name, {
             markup: markup,
             style: style,
             script: script
         });
     });
 
+    return data;
+}
+
+function init(coreAppInstance) {
+    coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
+
 	// Add POST route to retrieve specific content
 	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
+        if(!componentsData) {
+            // Read components data on first request as readers and finishers would not be set up on initial read
+            componentsData = readComponentsData(coreAppInstance);
+        }
+
         if(!body.components || !Array.isArray(body.components) || body.components.length == 0) {
 			return null;
 		}
