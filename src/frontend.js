@@ -1,5 +1,7 @@
 /*global config*/
 
+let componentClasses = new Map();
+
 window.MutationObserver || window.WebKitMutationObserver;
 (new MutationObserver(mutations => {
     let componentInstances = [];
@@ -28,9 +30,10 @@ window.MutationObserver || window.WebKitMutationObserver;
 
             document.head.appendChild(template);
             
+            const className = `${config.componentClassNamePrefix}${componentClasses.size}`;
             try {
                 eval(`
-                    customElements.define("${instanceName}", class extends HTMLElement {
+                    class ${className} extends HTMLElement {
                         constructor() {
                             super();
 
@@ -38,10 +41,12 @@ window.MutationObserver || window.WebKitMutationObserver;
                             this.${config.shadowRootAlias}.appendChild(document.querySelector("template#${instanceName}").content.cloneNode(true));
                         }
                         ${component.script || ""}
-                    });
+                    }
+                    componentClasses.set("${name}", ${className});
+                    customElements.define("${instanceName}", ${className});
                 `);
             } catch(err) {
-                throw new EvalError(`An error occurred executing a component script:\n"${err.message}" at '_${name}.js`);
+                throw new EvalError(`An error occurred executing a component script:\n"${err.message}" at '_${name}.js'`);
             }
         }
     });
@@ -49,3 +54,13 @@ window.MutationObserver || window.WebKitMutationObserver;
     subtree: true,
     childList: true
 });
+
+/**
+ * Retrieve a component class name reference (e.g. for accessing static members).
+ * @param {String} name Component name
+ * @returns {Class} Component class reference
+ */
+module.componentClass = name => {
+    name = name.replace(new RegExp(`^${config.instanceIndicator}`), "");
+    return componentClasses.get(name.toLowerCase());
+};

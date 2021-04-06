@@ -1,4 +1,5 @@
 const config = {
+    componentClassNamePefix: "rapidComponent_",
     instanceIndicator: "rapid--",
 	moduleName: "components",
     requestEndpoint: "_components",
@@ -25,7 +26,10 @@ function readComponentsData(coreAppInstance) {
             try {
                 data = coreAppInstance.read(extension, subPath);
             } catch(err) {
-                console.log(err)
+                if(err !== 1) {
+                    throw err;
+                }
+
                 data = String(readFileSync(subPath)).trim();
             }
 
@@ -170,7 +174,7 @@ function init(coreAppInstance) {
 
 	// Add POST route to retrieve specific content
 	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
-        if(!componentsData) {
+        if(coreAppInstance.config("devMode") || !componentsData) {
             // Read components data on first request as readers and finishers would not be set up on initial read
             componentsData = readComponentsData(coreAppInstance);
         }
