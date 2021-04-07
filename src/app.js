@@ -1,5 +1,6 @@
 const config = {
-	componentClassNamePefix: "rapidComponent_",
+	componentNamePrefix: "RapidComponent_",
+	componentsLoadedEventName: "rapid--ComponentsLoaded",
 	instanceIndicator: "rapid--",
 	moduleName: "components",
 	requestEndpoint: "_components",
@@ -102,7 +103,7 @@ function readComponentsData(coreAppInstance) {
 			} while(open > 0);
             
 			const listener = script.slice(startIndex, startIndex + endIndex);
-
+			
 			script = script.replace(new RegExp(`${listener.replace(/(\[|\]|\{|\}|\(|\)|\.)/g, "\\$1")}(\\s*\\)(\\s*;)?)?`), ""); // Remove listener fromscript to prevent endless recursion by scanning again
 
 			const attribute = listener.match(/("|'|`)\s*[a-zA-Z0-9_-]+\s*\1/)[0].slice(1, -1).trim();
@@ -125,14 +126,14 @@ function readComponentsData(coreAppInstance) {
 			listenedAttributes.push(attribute);
 		}
         
-		script += `
+		(listenerCases.length > 0) && (script += `
             attributeChangedCallback(attr, ${scriptTranslation.attributeChangedCallback.oldValueName}, ${scriptTranslation.attributeChangedCallback.newValueName}) {
                 switch(attr) {
                     ${listenerCases}
                 }
             }
             static get observedAttributes() {return [${listenedAttributes.map(attr => `"${attr}"`).join(",")}];}
-        `;
+        `);
 
 		return script;
 	};
