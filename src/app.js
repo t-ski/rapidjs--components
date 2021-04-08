@@ -1,6 +1,7 @@
 const config = {
 	componentNamePrefix: "RapidComponent_",
 	componentsLoadedEventName: "rapid--ComponentsLoaded",
+	hideStyleTagIdPrefix: "hide--",
 	instanceIndicator: "rapid--",
 	moduleName: "components",
 	requestEndpoint: "_components",
@@ -25,7 +26,7 @@ function readComponentsData(coreAppInstance) {
 		if(existsSync(subPath)) {
 			let data;
 			try {
-				data = coreAppInstance.read(extension, subPath);
+				data = String(coreAppInstance.read(extension, subPath));
 			} catch(err) {
 				if(err !== 1) {
 					throw err;
@@ -199,6 +200,26 @@ function init(coreAppInstance) {
 		}
 		return selectedComponentsData;
 	});
+
+	// Add finisher for adding hide style tags to prevent bare component markup to render before styles loaded
+	/*coreAppInstance.finisher("html", data => {
+		// Scan custom component instances
+		let componentInstances = (data.match(new RegExp(`<\\s*${config.instanceIndicator}[a-z0-9_-]+(\\s|>)`, "gi")) || []).map(component => {
+			return component.match(new RegExp(`${config.instanceIndicator}[a-z0-9_-]+`, "i"))[0];
+		});
+		if(componentInstances.length == 0) {
+			// No further action if no component instances found in markup
+			return data;
+		}
+		// Append head by hide style tags being removed when connected callback fires
+		Array.from(new Set(componentInstances)).forEach(component => {
+			data = coreAppInstance.appendHead(data, `
+				<style id="${config.hideStyleTagIdPrefix}${component}">${component}{visibility: hidden !important;}</style>
+			`);
+		});
+
+		return data;
+	});*/
 }
 
 module.exports = init;
