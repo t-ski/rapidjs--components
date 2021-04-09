@@ -1,5 +1,3 @@
-/*global RAPID, config*/
-
 let componentes = new Map();
 
 window.MutationObserver || window.WebKitMutationObserver;
@@ -14,7 +12,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 			componentInstances.add(node.tagName.toLowerCase());
 		});
 	});
-
+	
 	if(componentInstances.size == 0) {
 		// Exit if no custom component instance found
 		return;
