@@ -1,7 +1,7 @@
 const config = {
 	componentNamePrefix: "RapidComponent_",
 	componentsLoadedEventName: "rapid--ComponentsLoaded",
-	hideStyleTagIdPrefix: "hide--",
+	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
 	moduleName: "components",
 	requestEndpoint: "_components",
@@ -14,12 +14,14 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData;
 
+// TODO: Substitute components data storage by general caching mechanism
+
 function readComponentsData(coreAppInstance) {
 	/**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
-     * @returns {String} Component file data
+     * @returns {Object} Component file data object
      */
 	const retrieveComponentSubData = (componentDirPath, extension) => {
 		const subPath = `${componentDirPath}.${extension}`;
@@ -147,12 +149,17 @@ function readComponentsData(coreAppInstance) {
 	})
 		.filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
 		.forEach(dir => {
+			const name = dir.name.toLowerCase();
+			if(data.has(name)) {
+				return;	// Do not read duplicates (possible as of file system case sensitivity, but component insensitivity)
+			}
+
 			// Process each component as present in file system
-			const componentDirPath = join(componentsDirPath, dir.name, `_${dir.name}`);
+			const componentDirPath = join(componentsDirPath, name, `_${name}`);
         
 			const markup = retrieveComponentSubData(componentDirPath, "html");
 			if(!markup) {
-				coreAppInstance.log(`Skipping render of '${dir.name}' component as mandatory markup file does not exist or is empty`);
+				coreAppInstance.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
 				return;
 			}
 
@@ -162,13 +169,19 @@ function readComponentsData(coreAppInstance) {
 			let script = retrieveComponentSubData(componentDirPath, "js");
 			script && (script = translateScript(script));
 
-			data.set(dir.name, {
+			const subData = {
 				markup: markup,
 				style: style,
 				script: script
-			});
-		});
+			};
 
+			if(Object.keys(subData).length === 0) {
+				return;
+			}
+
+			data.set(name.toLowerCase(), subData);
+		});
+	
 	return data;
 }
 
@@ -182,44 +195,21 @@ function init(coreAppInstance) {
 			componentsData = readComponentsData(coreAppInstance);
 		}
 
-		if(!body.components || !Array.isArray(body.components) || body.components.length == 0) {
+		if(componentsData.size == 0 || !body.components || !Array.isArray(body.components) || body.components.length == 0) {
 			return null;
 		}
-        
+		
 		let selectedComponentsData = {};
-		body.components.forEach(component => {
-			if(!componentsData.has(component)) {
+		Array.from(new Set(body.components)).map(component => component.trim().toLowerCase()).forEach(component => {
+			const data = componentsData.get(component);
+			if(!data) {
 				return;
 			}
 
-			selectedComponentsData[component] = componentsData.get(component);
+			selectedComponentsData[component] = data;
 		});
-
-		if(Object.keys(selectedComponentsData).length === 0) {
-			return null;
-		}
 		return selectedComponentsData;
 	});
-
-	// Add finisher for adding hide style tags to prevent bare component markup to render before styles loaded
-	/*coreAppInstance.finisher("html", data => {
-		// Scan custom component instances
-		let componentInstances = (data.match(new RegExp(`<\\s*${config.instanceIndicator}[a-z0-9_-]+(\\s|>)`, "gi")) || []).map(component => {
-			return component.match(new RegExp(`${config.instanceIndicator}[a-z0-9_-]+`, "i"))[0];
-		});
-		if(componentInstances.length == 0) {
-			// No further action if no component instances found in markup
-			return data;
-		}
-		// Append head by hide style tags being removed when connected callback fires
-		Array.from(new Set(componentInstances)).forEach(component => {
-			data = coreAppInstance.appendHead(data, `
-				<style id="${config.hideStyleTagIdPrefix}${component}">${component}{visibility: hidden !important;}</style>
-			`);
-		});
-
-		return data;
-	});*/
 }
 
 module.exports = init;
