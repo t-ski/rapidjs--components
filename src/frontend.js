@@ -34,10 +34,13 @@ window.MutationObserver || window.WebKitMutationObserver;
 		.then(components => {
 		// Implement components accordingly
 			for(let name in components) {
-				// TODO: Do not read components twice
-
 				const component = components[name];
 				const instanceName = `${config.instanceIndicator}${name}`;
+
+				if(document.querySelector(`template${instanceName}`)) {
+					// Do not read components twice
+					return;
+				}
 
 				const template = document.createElement("template");
 				template.id = instanceName;

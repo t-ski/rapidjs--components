@@ -14,8 +14,6 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData;
 
-// TODO: Substitute components data storage by general caching mechanism
-
 function readComponentsData(coreAppInstance) {
 	/**
      * Retrieve file contents of a certain component file from a given directory.
@@ -187,6 +185,8 @@ function readComponentsData(coreAppInstance) {
 
 function init(coreAppInstance) {
 	coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
+
+	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
 
 	// Add POST route to retrieve specific content
 	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
