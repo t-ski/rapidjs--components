@@ -1,3 +1,8 @@
+/**
+ * @copyright Thassilo Martin Schiepanski
+ * t-ski@GitHub
+ */
+
 const config = {
 	componentNamePrefix: "RapidComponent_",
 	componentsLoadedEventName: "rapid--ComponentsLoaded",
@@ -183,8 +188,8 @@ function readComponentsData(coreAppInstance) {
 	return data;
 }
 
-function init(coreAppInstance) {
-	coreAppInstance.initFeatureFrontend(__dirname, config.moduleName, config);
+module.exports = coreAppInstance => {
+	coreAppInstance.initFeatureFrontend(__dirname, config);
 
 	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
 
@@ -210,6 +215,4 @@ function init(coreAppInstance) {
 		});
 		return selectedComponentsData;
 	});
-}
-
-module.exports = init;
+};
