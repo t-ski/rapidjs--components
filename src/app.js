@@ -1,6 +1,6 @@
 /**
- * @copyright Thassilo Martin Schiepanski
- * t-ski@GitHub
+ * @description Feature providing simplified custom web components functionality.
+ * @copyright/@author Thassilo Martin Schiepanski
  */
 
 const config = {
@@ -8,7 +8,6 @@ const config = {
 	componentsLoadedEventName: "rapid--ComponentsLoaded",
 	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
-	moduleName: "components",
 	requestEndpoint: "_components",
 	shadowRootAlias: "COMPONENT"
 };
@@ -33,7 +32,7 @@ function readComponentsData(coreAppInstance) {
 			try {
 				data = String(coreAppInstance.read(extension, subPath));
 			} catch(err) {
-				if(err !== 1) {
+				if(err !== 404) {
 					throw err;
 				}
 
@@ -184,7 +183,7 @@ function readComponentsData(coreAppInstance) {
 
 			data.set(name.toLowerCase(), subData);
 		});
-	
+
 	return data;
 }
 
@@ -203,7 +202,7 @@ module.exports = coreAppInstance => {
 		if(componentsData.size == 0 || !body.components || !Array.isArray(body.components) || body.components.length == 0) {
 			return null;
 		}
-		
+
 		let selectedComponentsData = {};
 		Array.from(new Set(body.components)).map(component => component.trim().toLowerCase()).forEach(component => {
 			const data = componentsData.get(component);
@@ -213,6 +212,7 @@ module.exports = coreAppInstance => {
 
 			selectedComponentsData[component] = data;
 		});
+
 		return selectedComponentsData;
 	});
 };

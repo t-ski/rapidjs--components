@@ -1,8 +1,3 @@
-/**
- * @copyright Thassilo Martin Schiepanski
- * t-ski@GitHub
- */
-
 let componentes = new Map();
 
 window.MutationObserver || window.WebKitMutationObserver;
