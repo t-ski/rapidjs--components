@@ -19,6 +19,12 @@ window.MutationObserver || window.WebKitMutationObserver;
 	}
 	
 	componentInstances = Array.from(componentInstances);
+	componentInstances = componentInstances.filter(instance => {
+		return (document.createElement(instance).constructor === HTMLElement);
+	});
+	if(componentInstances.length == 0) {
+		return;
+	}
 
 	// Create a hide style tag in order to prevent bare component markup to render before its styles having been loaded and parsed
 	const hideStyleElement = document.createElement("style");
@@ -27,7 +33,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 	document.head.appendChild(hideStyleElement);
 
 	// Request collected component related data
-	(componentInstances.length > 0) && RAPID.core.post(config.requestEndpoint, {
+	RAPID.core.post(config.requestEndpoint, {
 		components: componentInstances.map(component => component.replace(new RegExp(`^${config.instanceIndicator}`), ""))	// Send names without instance prefix
 	})
 		.then(res => res.json())
@@ -37,13 +43,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 				const component = components[name];
 				const instanceName = `${config.instanceIndicator}${name}`;
 
-				if(document.querySelector(`template${instanceName}`)) {
-					// Do not read components twice
-					return;
-				}
-
 				const template = document.createElement("template");
-				template.id = instanceName;
 				template.innerHTML = `${component.style ? `<style>${component.style}</style>` : ""}${component.markup}`;
 
 				document.head.appendChild(template);
@@ -51,18 +51,18 @@ window.MutationObserver || window.WebKitMutationObserver;
 				const className = `${config.componentNamePrefix}${componentes.size}`;
 				try {
 					eval(`
-				class ${className} extends HTMLElement {
-					constructor() {
-						super();
+						class ${className} extends HTMLElement {
+							constructor() {
+								super();
 
-						this.${config.shadowRootAlias} = this.attachShadow({mode: "closed"});
-						this.${config.shadowRootAlias}.appendChild(document.querySelector("template#${instanceName}").content.cloneNode(true));
-					}
-					${component.script || ""}
-				}
-				componentes.set("${name}", ${className});
-				customElements.define("${instanceName}", ${className});
-			`);
+								this.${config.shadowRootAlias} = this.attachShadow({mode: "closed"});
+								this.${config.shadowRootAlias}.appendChild(document.head.lastChild.content.cloneNode(true));
+							}
+							${component.script || ""}
+						}
+						componentes.set("${name}", ${className});
+						customElements.define("${instanceName}", ${className});
+					`);
 				} catch(err) {
 					// TODO: Improve error messages (parse backend-side?)
 					throw new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`);
