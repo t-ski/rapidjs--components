@@ -65,7 +65,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 					`);
 				} catch(err) {
 					// TODO: Improve error messages (parse backend-side?)
-					throw new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`);
+					console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
 				}
 			}
 
