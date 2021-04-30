@@ -68,8 +68,14 @@ function readComponentsData(coreAppInstance) {
 			let openedString = null;
 
 			do {
-				const character = block.slice(endIndex).match(/([^\\]("|`|'))|\{|\}/)[0];
-				endIndex += block.slice(endIndex).indexOf(character) + 1;
+				let character = block.slice(endIndex).match(/([^\\]("|`|'))|\{|\}/)[0];
+				endIndex += block.slice(endIndex).indexOf(character) + 2;
+				character = (character.length > 1) ? character.slice(1) : character;
+				
+				if(openedString) {
+					(openedString == character) && (openedString = null);
+					continue;
+				}
 				if(character == "{") {
 					open++;
 					continue;
@@ -78,14 +84,7 @@ function readComponentsData(coreAppInstance) {
 					open--;
 					continue;
 				}
-				if(["\"", "'", "`"].includes(character.slice(1))) {
-					if(openedString === null) {
-						openedString = character;
-					} else if(character == openedString) {
-						openedString = null;
-					}
-					continue;
-				}
+				openedString = character;
 			} while(open > 0);
 			
 			return script.slice(startIndex, startIndex + endIndex);
