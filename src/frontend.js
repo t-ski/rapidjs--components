@@ -1,5 +1,4 @@
 let componentClassReferences = new Map();
-let loadHandlers = [];
 
 window.MutationObserver || window.WebKitMutationObserver;
 (new MutationObserver(mutations => {
@@ -65,15 +64,13 @@ window.MutationObserver || window.WebKitMutationObserver;
 						customElements.define("${instanceName}", ${className});
 					`);
 					
-					component.script.loadHandler && loadHandlers.push(component.script.loadHandler);
+					// Call component load handler if provided
+					component.script.loadHandler && eval(component.script.loadHandler);
 				} catch(err) {
 					// TODO: Improve error messages (parse backend-side?)
 					console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
 				}
 			}
-			
-			// Call defined components loaded handlers
-			loadHandlers.forEach(handler => eval(handler));
 
 			// Remove hide style element as component styles all loaded
 			// Use timeout as no there is no way to check if styles already passed, but small delay common?
