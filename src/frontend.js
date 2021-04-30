@@ -1,4 +1,5 @@
-let componentes = new Map();
+let componentClassReferences = new Map();
+let loadHandlers = [];
 
 window.MutationObserver || window.WebKitMutationObserver;
 (new MutationObserver(mutations => {
@@ -48,7 +49,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 
 				document.head.appendChild(template);
 		
-				const className = `${config.componentNamePrefix}${componentes.size}`;
+				const className = `${config.componentNamePrefix}${components.size}`;
 				try {
 					eval(`
 						class ${className} extends HTMLElement {
@@ -58,20 +59,21 @@ window.MutationObserver || window.WebKitMutationObserver;
 								this.${config.shadowRootAlias} = this.attachShadow({mode: "closed"});
 								this.${config.shadowRootAlias}.appendChild(document.head.lastChild.content.cloneNode(true));
 							}
-							${component.script || ""}
+							${component.script.native || ""}
 						}
-						componentes.set("${name}", ${className});
+						componentClassReferences.set("${name}", ${className});
 						customElements.define("${instanceName}", ${className});
 					`);
+					
+					component.script.loadHandler && loadHandlers.push(component.script.loadHandler);
 				} catch(err) {
 					// TODO: Improve error messages (parse backend-side?)
 					console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
 				}
 			}
-
-			// Dispatch components loaded event for possible reactions
-			const event = new Event(config.componentsLoadedEventName);
-			document.dispatchEvent(event);
+			
+			// Call defined components loaded handlers
+			loadHandlers.forEach(handler => eval(handler));
 
 			// Remove hide style element as component styles all loaded
 			// Use timeout as no there is no way to check if styles already passed, but small delay common?
@@ -89,7 +91,7 @@ window.MutationObserver || window.WebKitMutationObserver;
  * @param {String} name Component name
  * @returns {Class} Component class reference
  */
-module.component = name => {
+ module.component = name => {
 	name = name.replace(new RegExp(`^${config.instanceIndicator}`), "");
-	return componentes.get(name.toLowerCase());
+	return componentClassReferences.get(name.toLowerCase());
 };

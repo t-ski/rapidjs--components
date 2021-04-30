@@ -5,9 +5,9 @@
 
 const config = {
 	componentNamePrefix: "RapidComponent_",
-	componentsLoadedEventName: "rapid--ComponentsLoaded",
 	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
+	loadHandlerName: "::initialized",
 	requestEndpoint: "_components",
 	shadowRootAlias: "COMPONENT"
 };
@@ -54,6 +54,43 @@ function readComponentsData(coreAppInstance) {
      * @returns {String} Valid syntax script
      */
 	const translateScript = script => {
+		/**
+		 * Extract a code block ({}) from script.
+		 * @helper
+		 * @param {Number} script Script to extract block from
+		 * @param {String} startIndex Index of block head in script
+		 * @returns {String} Extracted block
+		 */
+		const extractBlock = (script, startIndex) => {
+			let open = 1;
+			let block = script.slice(startIndex);
+			let endIndex = block.indexOf("{") + 1;
+			let openedString = null;
+
+			do {
+				const character = block.slice(endIndex).match(/([^\\]("|`|'))|\{|\}/)[0];
+				endIndex += block.slice(endIndex).indexOf(character) + 1;
+				if(character == "{") {
+					open++;
+					continue;
+				}
+				if(character == "}") {
+					open--;
+					continue;
+				}
+				if(["\"", "'", "`"].includes(character.slice(1))) {
+					if(openedString === null) {
+						openedString = character;
+					} else if(character == openedString) {
+						openedString = null;
+					}
+					continue;
+				}
+			} while(open > 0);
+			
+			return script.slice(startIndex, startIndex + endIndex);
+		};
+		
 		const scriptTranslation = {
 			lifecyclePrefix: "::",
 			lifecycle: {
@@ -82,34 +119,9 @@ function readComponentsData(coreAppInstance) {
 		let listenedAttributes = [];
 		let startIndex;
 		while((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.attributeChangedCallback.name}\\s*\\(`))) > -1) {    // TODO: Extend regex?
-			let open = 1;
-			let block = script.slice(startIndex);
-			let endIndex = block.indexOf("{") + 1;
-			let openedString = null;
-			do {
-				const character = block.slice(endIndex).match(/([^\\]("|`|'))|\{|\}/)[0];
-				endIndex += block.slice(endIndex).indexOf(character) + 1;
-				if(character == "{") {
-					open++;
-					continue;
-				}
-				if(character == "}") {
-					open--;
-					continue;
-				}
-				if(["\"", "'", "`"].includes(character.slice(1))) {
-					if(openedString === null) {
-						openedString = character;
-					} else if(character == openedString) {
-						openedString = null;
-					}
-					continue;
-				}
-			} while(open > 0);
-            
-			const listener = script.slice(startIndex, startIndex + endIndex);
+			const listener = extractBlock(script, startIndex);
 			
-			script = script.replace(new RegExp(`${listener.replace(/(\[|\]|\{|\}|\(|\)|\.)/g, "\\$1")}(\\s*\\)(\\s*;)?)?`), ""); // Remove listener fromscript to prevent endless recursion by scanning again
+			script = script.replace(new RegExp(`${listener.replace(/(\[|\]|\{|\}|\(|\)|\.)/g, "\\$1")}(\\s*\\)(\\s*;)?)?`), ""); // Remove listener from script to prevent endless recursion by getting scanning again
 
 			const attribute = listener.match(/("|'|`)\s*[a-zA-Z0-9_-]+\s*\1/)[0].slice(1, -1).trim();
 			let body = listener.slice(listener.indexOf("{") + 1, -1).trim();
@@ -130,7 +142,7 @@ function readComponentsData(coreAppInstance) {
 
 			listenedAttributes.push(attribute);
 		}
-        
+
 		(listenerCases.length > 0) && (script += `
             attributeChangedCallback(attr, ${scriptTranslation.attributeChangedCallback.oldValueName}, ${scriptTranslation.attributeChangedCallback.newValueName}) {
                 switch(attr) {
@@ -140,7 +152,19 @@ function readComponentsData(coreAppInstance) {
             static get observedAttributes() {return [${listenedAttributes.map(attr => `"${attr}"`).join(",")}];}
         `);
 
-		return script;
+		// Extract load handler if defined
+		let loadHandler;
+		if((startIndex = script.search(new RegExp(`(^|\\s)${config.loadHandlerName}\\s*\\(`))) > -1) {
+			loadHandler = extractBlock(script, startIndex).trim();
+			script = script.replace(loadHandler, "");
+
+			loadHandler = loadHandler.slice(loadHandler.indexOf("{") + 1, -1).trim();
+		}
+
+		return {
+			native: script,
+			loadHandler: loadHandler,
+		};
 	};
 
 	let data = new Map();
@@ -153,7 +177,7 @@ function readComponentsData(coreAppInstance) {
 		.forEach(dir => {
 			const name = dir.name.toLowerCase();
 			if(data.has(name)) {
-				return;	// Do not read duplicates (possible as of file system case sensitivity, but component insensitivity)
+				return;	// Do not read duplicates
 			}
 
 			// Process each component as present in file system
@@ -170,7 +194,7 @@ function readComponentsData(coreAppInstance) {
 
 			let script = retrieveComponentSubData(componentDirPath, "js");
 			script && (script = translateScript(script));
-
+			
 			const subData = {
 				markup: markup,
 				style: style,
@@ -185,6 +209,8 @@ function readComponentsData(coreAppInstance) {
 		});
 
 	return data;
+
+	// TODO: Minify?
 }
 
 module.exports = coreAppInstance => {
