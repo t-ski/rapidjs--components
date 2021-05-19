@@ -18,7 +18,7 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData;
 
-function readComponentsData(coreAppInstance) {
+function readComponentsData(coreInterface) {
 	/**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
@@ -30,7 +30,7 @@ function readComponentsData(coreAppInstance) {
 		if(existsSync(subPath)) {
 			let data;
 			try {
-				data = String(coreAppInstance.read(extension, subPath));
+				data = String(coreInterface.applyReader(extension, subPath));
 			} catch(err) {
 				if(err !== 404) {
 					throw err;
@@ -43,7 +43,7 @@ function readComponentsData(coreAppInstance) {
 				return null;
 			}
 
-			return coreAppInstance.finish(extension, data);
+			return coreInterface.applyResponseModifier(extension, data);
 		}
 		return null;
 	};
@@ -168,7 +168,7 @@ function readComponentsData(coreAppInstance) {
 
 	let data = new Map();
 
-	const componentsDirPath = join(coreAppInstance.webPath(), coreAppInstance.config("componentsDirPath"));
+	const componentsDirPath = join(coreInterface.webPath, coreInterface.getFromConfig("componentsDirPath"));
 	existsSync(componentsDirPath) && readdirSync(componentsDirPath, {
 		withFileTypes: true
 	})
@@ -184,7 +184,7 @@ function readComponentsData(coreAppInstance) {
         
 			const markup = retrieveComponentSubData(componentDirPath, "html");
 			if(!markup) {
-				coreAppInstance.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
+				coreInterface.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
 				return;
 			}
 
@@ -212,16 +212,18 @@ function readComponentsData(coreAppInstance) {
 	// TODO: Minify?
 }
 
-module.exports = coreAppInstance => {
-	coreAppInstance.initFeatureFrontend(__dirname, config);
+// TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
+
+module.exports = coreInterface => {
+	coreInterface.initFrontendModule(__dirname, config);
 
 	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
 
 	// Add POST route to retrieve specific content
-	coreAppInstance.route("post", `/${config.requestEndpoint}`, body => {
-		if(coreAppInstance.config("devMode") || !componentsData) {
-			// Read components data on first request as readers and finishers would not be set up on initial read
-			componentsData = readComponentsData(coreAppInstance);
+	coreInterface.setRoute("post", `/${config.requestEndpoint}`, body => {
+		if(coreInterface.getFromConfig("devMode") || !componentsData) {
+			// Read components data on first request as readers and finalizers would not be set up on initial read
+			componentsData = readComponentsData(coreInterface);
 		}
 
 		if(componentsData.size == 0 || !body.components || !Array.isArray(body.components) || body.components.length == 0) {

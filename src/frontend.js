@@ -88,7 +88,7 @@ window.MutationObserver || window.WebKitMutationObserver;
  * @param {String} name Component name
  * @returns {Class} Component class reference
  */
- module.component = name => {
+ plugin.component = name => {
 	name = name.replace(new RegExp(`^${config.instanceIndicator}`), "");
 	return componentClassReferences.get(name.toLowerCase());
 };
