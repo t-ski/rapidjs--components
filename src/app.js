@@ -184,7 +184,7 @@ function readComponentsData(coreInterface) {
         
 			const markup = retrieveComponentSubData(componentDirPath, "html");
 			if(!markup) {
-				coreInterface.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
+				coreInterface.output.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
 				return;
 			}
 
