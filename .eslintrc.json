@@ -6,11 +6,9 @@
     },
     "extends": "eslint:recommended",
     "globals": {
-        "plugin": true
-    },
-    "globals": {
         "RAPID": "readonly",
-        "config": "readonly"
+        "config": "readonly",
+        "plugin": true
     },
     "parserOptions": {
         "ecmaVersion": 12,

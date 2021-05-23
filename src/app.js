@@ -1,13 +1,13 @@
 /**
- * @description Feature providing simplified custom web components functionality.
- * @copyright/@author Thassilo Martin Schiepanski
+ * Plug-in providing simplified custom web components functionality.
+ * 
+ * (c) Thassilo Martin Schiepanski
  */
 
 const config = {
 	componentNamePrefix: "RapidComponent_",
 	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
-	loadHandlerName: "::initialized",
 	requestEndpoint: "_components",
 	shadowRootAlias: "COMPONENT"
 };
@@ -19,13 +19,19 @@ const {join} = require("path");
 let componentsData;
 
 function readComponentsData(coreInterface) {
+	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifiers");
+	const applyResponseModifier = (extension, data) => {
+		return (useResponseModifier === true) ? coreInterface.applyResponseModifier(extension, data): data;
+	};
+
 	/**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
+     * @param {Boolean} [applyResponseModifier=true] Whether to apply response modifier
      * @returns {Object} Component file data object
      */
-	const retrieveComponentSubData = (componentDirPath, extension) => {
+	const retrieveComponentSubData = (componentDirPath, extension, useResponseModifier = true) => {
 		const subPath = `${componentDirPath}.${extension}`;
 		if(existsSync(subPath)) {
 			let data;
@@ -38,12 +44,12 @@ function readComponentsData(coreInterface) {
 
 				data = String(readFileSync(subPath)).trim();
 			}
-
+			
 			if(data.length == 0) {
 				return null;
 			}
 
-			return coreInterface.applyResponseModifier(extension, data);
+			return useResponseModifier ? applyResponseModifier(extension, data) : data;
 		}
 		return null;
 	};
@@ -101,8 +107,8 @@ function readComponentsData(coreInterface) {
 				name: "addChangeListener",
 				oldValueName: "oldValue",
 				newValueName: "newValue",
-			}
-        
+			},
+			loadHandlerName: "::initialized"
 		};
 
 		// Remove comments
@@ -153,7 +159,7 @@ function readComponentsData(coreInterface) {
 
 		// Extract load handler if defined
 		let loadHandler;
-		if((startIndex = script.search(new RegExp(`(^|\\s)${config.loadHandlerName}\\s*\\(`))) > -1) {
+		if((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.loadHandlerName}\\s*\\(`))) > -1) {
 			loadHandler = extractBlock(script, startIndex).trim();
 			script = script.replace(loadHandler, "");
 
@@ -191,8 +197,15 @@ function readComponentsData(coreInterface) {
 			let style = retrieveComponentSubData(componentDirPath, "css");
 			!style && (style = retrieveComponentSubData(componentDirPath, "scss")); // Try SCSS if no related CSS file found
 
-			let script = retrieveComponentSubData(componentDirPath, "js");
-			script && (script = translateScript(script));
+			let script = retrieveComponentSubData(componentDirPath, "js", false);
+			if(script) {
+				script = translateScript(script);
+				console.log(script)
+				script.native = applyResponseModifier("js", script.native);
+				script.loadHandler = applyResponseModifier("js", script.loadHandler);
+				console.log(script)
+			};
+			
 			
 			const subData = {
 				markup: markup,
@@ -215,7 +228,7 @@ function readComponentsData(coreInterface) {
 // TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
 
 module.exports = coreInterface => {
-	coreInterface.initFrontendModule(__dirname, config);
+	coreInterface.initFrontendModule(config);
 
 	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
 

@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-- [<feature_name>](<feature_info_page_url>)
+- [rapid-dynamic-pages](https://rapidjs.org/plug-ins:dynamic-pages)
 
 ## Purpose
 
