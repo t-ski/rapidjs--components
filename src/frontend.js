@@ -31,7 +31,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 	hideStyleElement.textContent = `${componentInstances.join(", ")} { visibility: hidden !important; }`;
 	hideStyleElement.id = config.hideStyleElementId;
 	document.head.appendChild(hideStyleElement);
-
+	
 	// Request collected component related data
 	RAPID.core.post(config.requestEndpoint, {
 		components: componentInstances.map(component => component.replace(new RegExp(`^${config.instanceIndicator}`), ""))	// Send names without instance prefix

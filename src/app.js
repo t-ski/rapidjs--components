@@ -8,7 +8,7 @@ const config = {
 	componentNamePrefix: "RapidComponent_",
 	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
-	requestEndpoint: "_components",
+	requestEndpoint: "/_components",
 	shadowRootAlias: "COMPONENT"
 };
 
@@ -19,7 +19,7 @@ const {join} = require("path");
 let componentsData;
 
 function readComponentsData(coreInterface) {
-	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifiers");
+	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifier", "components");
 	const applyResponseModifier = (extension, data) => {
 		return (useResponseModifier === true) ? coreInterface.applyResponseModifier(extension, data): data;
 	};
@@ -174,7 +174,20 @@ function readComponentsData(coreInterface) {
 
 	let data = new Map();
 
-	const componentsDirPath = join(coreInterface.webPath, coreInterface.getFromConfig("componentsDirPath"));
+	let componentsDirPath = coreInterface.getFromConfig("componentsDirPath");
+	if(!componentsDirPath) {
+		coreInterface.output.log("No components directory path given in config file ('rapid.config.json'.'components'.'componentsDirPath')");
+		
+		return;
+	}
+
+	componentsDirPath = join(coreInterface.webPath, componentsDirPath);
+	if(!existsSync(componentsDirPath)) {
+		coreInterface.output.log(`Components directory as given in config file not found '${componentsDirPath}'`);
+
+		return;
+	}
+
 	existsSync(componentsDirPath) && readdirSync(componentsDirPath, {
 		withFileTypes: true
 	})
@@ -200,12 +213,9 @@ function readComponentsData(coreInterface) {
 			let script = retrieveComponentSubData(componentDirPath, "js", false);
 			if(script) {
 				script = translateScript(script);
-				console.log(script)
 				script.native = applyResponseModifier("js", script.native);
-				script.loadHandler = applyResponseModifier("js", script.loadHandler);
-				console.log(script)
+				script.loadHandler && (script.loadHandler = applyResponseModifier("js", script.loadHandler));
 			};
-			
 			
 			const subData = {
 				markup: markup,
@@ -225,15 +235,16 @@ function readComponentsData(coreInterface) {
 	// TODO: Minify?
 }
 
+// TODO: Implement apply response modifier disable directive for single files?
 // TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
 
 module.exports = coreInterface => {
 	coreInterface.initFrontendModule(config);
 
 	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
-
+	
 	// Add POST route to retrieve specific content
-	coreInterface.setRoute("post", `/${config.requestEndpoint}`, body => {
+	coreInterface.setRoute("post", config.requestEndpoint, body => {
 		if(coreInterface.getFromConfig("devMode") || !componentsData) {
 			// Read components data on first request as readers and finalizers would not be set up on initial read
 			componentsData = readComponentsData(coreInterface);
