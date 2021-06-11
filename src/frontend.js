@@ -1,5 +1,9 @@
 let componentClassReferences = new Map();
 
+document.addEventListener("DOMContentLoaded", e => {
+	e.preventDefault();
+});
+
 window.MutationObserver || window.WebKitMutationObserver;
 (new MutationObserver(mutations => {
 	// Retrieve added custom component instance types
@@ -65,7 +69,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 					`);
 					
 					// Call component load handler if provided
-					component.script.loadHandler && eval(component.script.loadHandler);
+					component.script.loadHandler && window.eval(component.script.loadHandler);
 				} catch(err) {
 					// TODO: Improve error messages (parse backend-side?)
 					console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
@@ -77,6 +81,20 @@ window.MutationObserver || window.WebKitMutationObserver;
 			//setTimeout(_ => { 
 			document.head.removeChild(document.head.querySelector(`style#${config.hideStyleElementId}`));
 			//}, 0);
+
+			// Scroll to anchor if given (as dimensions changed)
+			if(document.location.hash) {
+				const anchorElement = document.querySelector(`#${document.location.hash.replace(/^#/, "")}`);
+
+				let i = 0;
+				const anchorScrollInterval = setInterval(_ => {
+					anchorElement.scrollIntoView();
+					i++;
+					if(i >= 10) {
+						clearInterval(anchorScrollInterval);
+					}
+				}, 25);
+			}
 		});
 })).observe(document, {
 	subtree: true,

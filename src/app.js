@@ -172,15 +172,12 @@ function readComponentsData(coreInterface) {
 		};
 	};
 
-	let data = new Map();
-
 	let componentsDirPath = coreInterface.getFromConfig("componentsDirPath");
 	if(!componentsDirPath) {
 		coreInterface.output.log("No components directory path given in config file ('rapid.config.json'.'components'.'componentsDirPath')");
 		
 		return;
 	}
-
 	componentsDirPath = join(coreInterface.webPath, componentsDirPath);
 	if(!existsSync(componentsDirPath)) {
 		coreInterface.output.log(`Components directory as given in config file not found '${componentsDirPath}'`);
@@ -188,7 +185,9 @@ function readComponentsData(coreInterface) {
 		return;
 	}
 
-	existsSync(componentsDirPath) && readdirSync(componentsDirPath, {
+	let data = new Map();
+	
+	readdirSync(componentsDirPath, {
 		withFileTypes: true
 	})
 		.filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
@@ -245,7 +244,7 @@ module.exports = coreInterface => {
 	
 	// Add POST route to retrieve specific content
 	coreInterface.setRoute("post", config.requestEndpoint, body => {
-		if(coreInterface.getFromConfig("devMode") || !componentsData) {
+		if(coreInterface.isDevMode || !componentsData) {
 			// Read components data on first request as readers and finalizers would not be set up on initial read
 			componentsData = readComponentsData(coreInterface);
 		}
