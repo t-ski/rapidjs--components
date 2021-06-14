@@ -8,6 +8,7 @@ const config = {
 	componentNamePrefix: "RapidComponent_",
 	hideStyleElementId: "rapid--hide",
 	instanceIndicator: "rapid--",
+	maxTagNameLength: 250,
 	requestEndpoint: "/_components",
 	shadowRootAlias: "COMPONENT"
 };
@@ -194,7 +195,7 @@ function readComponentsData(coreInterface) {
 		.forEach(dir => {
 			const name = dir.name.toLowerCase();
 			if(data.has(name)) {
-				return;	// Do not read duplicates
+				return;	// Do not read duplicates and components with extremely long name
 			}
 
 			// Process each component as present in file system
@@ -254,7 +255,12 @@ module.exports = coreInterface => {
 		}
 
 		let selectedComponentsData = {};
-		Array.from(new Set(body.components)).map(component => component.trim().toLowerCase()).forEach(component => {
+		Array.from(new Set(body.components))
+		.filter(component => {
+			return (component.length <= config.maxTagNameLength);
+		})
+		.map(component => component.trim().toLowerCase())
+		.forEach(component => {
 			const data = componentsData.get(component);
 			if(!data) {
 				return;

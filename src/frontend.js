@@ -10,7 +10,8 @@ window.MutationObserver || window.WebKitMutationObserver;
 	let componentInstances = new Set();
 	mutations.forEach(mutation => {
 		mutation.addedNodes.forEach(node => {
-			if(!(new RegExp(`^${config.instanceIndicator}[a-z0-9_-]+$`, "i")).test(node.tagName)) {
+			if(node.tagName && (node.tagName.length > config.maxTagNameLength)	// Do not process components with extremely long (tag) names
+			|| !(new RegExp(`^${config.instanceIndicator}[a-z0-9_-]+$`, "i")).test(node.tagName)) {
 				return;
 			}
 			componentInstances.add(node.tagName.toLowerCase());
