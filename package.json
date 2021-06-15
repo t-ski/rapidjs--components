@@ -1,5 +1,5 @@
 {
-  "name": "rapid-components",
+  "name": "rapid--components",
   "version": "1.0.0",
   "description": "",
   "main": "src/app.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/t-ski/rapid-components.git"
+    "url": "git+https://github.com/t-ski/rapid--components.git"
   },
   "author": "Thassilo Martin Schiepanski",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/t-ski/rapid-components/issues"
+    "url": "https://github.com/t-ski/rapid--components/issues"
   },
-  "homepage": "https://github.com/t-ski/rapid-components#readme",
+  "homepage": "https://github.com/t-ski/rapid--components#readme",
   "devDependencies": {
     "eslint": "^7.21.0"
   }
