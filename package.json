@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
+    "build": "node ../../_build/build.js",
     "start": "node ./src/app.js",
     "test": "./node_modules/.bin/eslint --fix src/"
   },
@@ -12,7 +13,7 @@
     "url": "git+https://github.com/t-ski/rapid--components.git"
   },
   "author": "Thassilo Martin Schiepanski",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/t-ski/rapid--components/issues"
   },
