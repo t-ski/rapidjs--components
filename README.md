@@ -1,7 +1,6 @@
 # rapid--components
 
 > Plug-in application for [rapidJS](https://rapidjs.org)
-
 ---
 
 ## Purpose
