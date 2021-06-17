@@ -1,5 +1,9 @@
 # rapid--components
 
+> Plug-in application for [rapidJS](https://rapidjs.org)
+
+---
+
 ## Purpose
 
 Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
