@@ -1,7 +1,6 @@
-# rapid--components
+# rapidjs--components
 
-> Plug-in application for [rapidJS](https://rapidjs.org)
----
+<a href="https://rapidjs.org"><img src="https://rapidjs.org/_assets/readme-plugin-badge.svg" height="75"></a>
 
 ## Purpose
 
@@ -10,7 +9,7 @@ Providing abstract web components functionality for creating individual, self-co
 ## Installation
 
 ```
-npm install "rapid--components"
+npm install rapidjs--components
 ```
 
 ## Usage
@@ -21,7 +20,7 @@ The plug-in basically provides an abstraction wrapper around the [web components
 
 ### Specific component directory
 
-Each component is to be organized in its own directory containing component related files. The component's element tag name corresponds to the respective directory name, prefixed by the component prefix **rapid--**. All component files in the directory will need to have the same name as the directory does.
+Each component is to be organized in its own directory containing component related files. The component's element tag name corresponds to the respective directory name, prefixed by the component prefix **rapidjs--**. All component files in the directory will need to have the same name as the directory does.
 
 #### Markup file
 
@@ -54,5 +53,3 @@ All component specific directories are to be placed in a dedicated components di
         "componentsDirPath": "./_components"
     }
 ```
-
-

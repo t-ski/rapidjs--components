@@ -1,23 +1,22 @@
 {
-  "name": "rapid--components",
+  "name": "rapidjs--components",
   "version": "1.0.0",
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "build": "node ../../_build/build.js",
     "start": "node ./src/app.js",
     "test": "./node_modules/.bin/eslint --fix src/"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/t-ski/rapid--components.git"
+    "url": "git+https://github.com/t-ski/rapidjs--components.git"
   },
   "author": "Thassilo Martin Schiepanski",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/t-ski/rapid--components/issues"
+    "url": "https://github.com/t-ski/rapidjs--components/issues"
   },
-  "homepage": "https://github.com/t-ski/rapid--components#readme",
+  "homepage": "https://github.com/t-ski/rapidjs--components#readme",
   "devDependencies": {
     "eslint": "^7.21.0"
   }

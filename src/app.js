@@ -6,8 +6,8 @@
 
 const config = {
 	componentNamePrefix: "RapidComponent_",
-	hideStyleElementId: "rapid--hide",
-	instanceIndicator: "rapid--",
+	hideStyleElementId: "rapidjs--hide",
+	instanceIndicator: "rapidjs--",
 	maxTagNameLength: 250,
 	requestEndpoint: "/_components",
 	shadowRootAlias: "COMPONENT"
