@@ -7,7 +7,7 @@
 const config = {
 	componentNamePrefix: "RapidComponent_",
 	hideStyleElementId: "rapidjs--hide",
-	instanceIndicator: "rapidjs--",
+	instanceIndicator: "component--",
 	maxTagNameLength: 250,
 	requestEndpoint: "/_components",
 	shadowRootAlias: "COMPONENT"
@@ -215,7 +215,7 @@ function readComponentsData(coreInterface) {
 				script = translateScript(script);
 				script.native = applyResponseModifiers("js", script.native);
 				script.loadHandler && (script.loadHandler = applyResponseModifiers("js", script.loadHandler));
-			};
+			}
 			
 			const subData = {
 				markup: markup,
@@ -260,18 +260,18 @@ module.exports = coreInterface => {
 
 		let selectedComponentsData = {};
 		Array.from(new Set(body.components))
-		.filter(component => {
-			return (component.length <= config.maxTagNameLength);
-		})
-		.map(component => component.trim().toLowerCase())
-		.forEach(component => {
-			const data = componentsData.get(component);
-			if(!data) {
-				return;
-			}
+			.filter(component => {
+				return (component.length <= config.maxTagNameLength);
+			})
+			.map(component => component.trim().toLowerCase())
+			.forEach(component => {
+				const data = componentsData.get(component);
+				if(!data) {
+					return;
+				}
 
-			selectedComponentsData[component] = data;
-		});
+				selectedComponentsData[component] = data;
+			});
 
 		return selectedComponentsData;
 	});

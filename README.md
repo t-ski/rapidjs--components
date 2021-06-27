@@ -99,7 +99,7 @@ State the respective name and a callback getting passed the attribute value prio
 By default, response modifiers that have been set up on the core environment will not affect component files. To enable response modification for component files, set the following parameter in the web configuration file to `true`:
 
 ``` json
-    "plug-ins.components.applyResponseModifiers": true
+"plug-ins.components.applyResponseModifiers": true
 ```
 
 ---
@@ -109,7 +109,7 @@ By default, response modifiers that have been set up on the core environment wil
 All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
 
 ``` json
-    "plug-ins.components.componentsDirPath": "./_components"
+"plug-ins.components.componentsDirPath": "./_components"
 ```
 
 ---
