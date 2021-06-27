@@ -2,54 +2,132 @@
 
 <a href="https://rapidjs.org"><img src="https://rapidjs.org/_assets/readme-plugin-badge.svg" height="75"></a>
 
-## Purpose
-
 Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
-
-## Installation
 
 ```
 npm install rapidjs--components
 ```
 
-## Usage
+## Concept
 
-### Concept
+The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the HTML element set. I.e. web components are to be used just like ordinary HTML elements.
 
-The plug-in basically provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified and enclosed usage enviornment of that standard. of Effectively, a valid web component represents an extension of the HTML element set. I.e. web components are to be used just likeordinary HTML elements, but utilizing a specific structure, style and logic.
+---
 
-### Specific component directory
+## Specific component directory
 
-Each component is to be organized in its own directory containing component related files. The component's element tag name corresponds to the respective directory name, prefixed by the component prefix **rapidjs--**. All component files in the directory will need to have the same name as the directory does.
+Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator **rapidjs--**. All component files inside of a component directory must be named just like the respective component directory.
 
-#### Markup file
+## Markup file
 
-A file (.html) stating standard markup to compose the component's blackboxed interface needs to exist in the component directory in order to make it work.
+A file (.html) stating standard markup to compose the component's blackboxed interface. A component markup file is required in order to receive a working component.
 
-#### Styles file
+### Slotted content
 
-Optionally, a styles file (.css) may be set up to give individual styling to the markup provided in the markup file.\
+To tell the custom component where to place inner HTML passed to a related instance, use slot tags. The slotted content behaviour and any related functionality (such as styling slotted elements) completely resembles the standard behaviour.\
 \
-When giving a .scss file to use SASS, a respective reader on the core interface must be set up to transpile SCSS to CSS code. In order to have the transpilation be done by a response modifier, enable response modifier application on component files as follows:
+Read more about [component markup and slots](https://www.webcomponents.org/specs#the-shadow-dom-specification).
+
+## Styles file
+
+Optionally, a styles file (.css) may be set up to give individual styling to the provided markup.\
+\
+The plug-in also works with.scss files instead, utilizing a respectively set up explicit reader to transpile SCSS to browser-valid CSS code. Do ot use SCSS for styling if no transpilation mechanism (explicit reader or response modifier) has been set up.
+
+## Script file
+
+The optional script file provides an interface for giving a component individual state space. A script file provides a private scope, representing the component class environment.
+
+### Lifecycle
+
+Act upon lifecycle events by intercepting them in orde to run a custom script in acallback. State the callback linked to the related event as follows:
 
 ``` js
-    "components": {
-        "applyResponseModifier": false,
-    }
+::<lifecycle-event> {
+    // Custom script
+}
 ```
 
-> When appling response modifiers to components, all component files will be affected by respective response modifiers (e.g. HTML minification would be applied to the component markup file, too).
+#### Events
 
-#### Script file
+`connected`     *Fires once a component instance has been connected to the DOM*
 
-The also optional script file ...
+`disconnected`  *Fires once a component instance has been disconnected from the DOM*
 
-### General components directory
+`moved`         *Fires once a component instance has been moved*
 
-All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope: 
+#### Connected
+
+Fires once a component instance has been connected to the DOM.
+
+### Methods
+
+Methods are to be created by simply giving a name followed by an argument list and the function scoped body:
 
 ``` js
-    "components": {
-        "componentsDirPath": "./_components"
-    }
+methodName(arguments) {
+    // Custom script
+}
 ```
+
+Any method is publicly accessible from and bound to component instance objects.
+
+### this keyword
+
+The keyword `this` within lifecycle event interceptors and methods gives a reference to the related compoenent instance.
+
+### Component DOM
+
+In order to manipulate the component specific DOM constructed based on the component markup, use the `COMPONENT`identifier on a related instance (e.g. `this.COMPONENT.querySelector("button").style.display = "block";`).
+
+### Attribute change listeners
+
+As the graphical interface of a component instance might depend on its attribute values, listening to attribute changes can be achieved using attribute change listeners by the following concept:
+
+``` js
+addChangeListener("attrbute-name", (oldValue, newValue) => {
+    // Custom script
+});
+```
+
+State the respective name and a callback getting passed the attribute value prior to and after the change to be triggered upon each attribute change.
+
+---
+
+## Apply response modifiers
+
+By default, response modifiers that have been set up on the core environment will not affect component files. To enable response modification for component files, set the following parameter in the web configuration file to `true`:
+
+``` json
+    "plug-ins.components.applyResponseModifiers": true
+```
+
+---
+
+## General components directory
+
+All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
+
+``` json
+    "plug-ins.components.componentsDirPath": "./_components"
+```
+
+---
+
+## Retrieve component class reference
+
+Sometimes it might be helpful to have a reference to a component class, e.g. for accessing static members. The component interface provides a way to retrieve a certain reference.
+
+#### Syntax
+
+```
+ plugin.component(name)
+```
+
+#### Parameter
+
+**name** `String`   *Component (tag) name*
+
+#### Return value
+
+`Class` *Component class reference*

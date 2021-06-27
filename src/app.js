@@ -20,16 +20,16 @@ const {join} = require("path");
 let componentsData;
 
 function readComponentsData(coreInterface) {
-	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifier", "components");
-	const applyResponseModifier = (extension, data) => {
-		return (useResponseModifier === true) ? coreInterface.applyResponseModifier(extension, data): data;
+	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifiers", "components");
+	const applyResponseModifiers = (extension, data) => {
+		return (useResponseModifier === true) ? coreInterface.applyResponseModifiers(extension, data): data;
 	};
 
 	/**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
-     * @param {Boolean} [applyResponseModifier=true] Whether to apply response modifier
+     * @param {Boolean} [applyResponseModifiers=true] Whether to apply response modifier
      * @returns {Object} Component file data object
      */
 	const retrieveComponentSubData = (componentDirPath, extension, useResponseModifier = true) => {
@@ -50,7 +50,7 @@ function readComponentsData(coreInterface) {
 				return null;
 			}
 
-			return useResponseModifier ? applyResponseModifier(extension, data) : data;
+			return useResponseModifier ? applyResponseModifiers(extension, data) : data;
 		}
 		return null;
 	};
@@ -213,8 +213,8 @@ function readComponentsData(coreInterface) {
 			let script = retrieveComponentSubData(componentDirPath, "js", false);
 			if(script) {
 				script = translateScript(script);
-				script.native = applyResponseModifier("js", script.native);
-				script.loadHandler && (script.loadHandler = applyResponseModifier("js", script.loadHandler));
+				script.native = applyResponseModifiers("js", script.native);
+				script.loadHandler && (script.loadHandler = applyResponseModifiers("js", script.loadHandler));
 			};
 			
 			const subData = {
@@ -250,7 +250,11 @@ module.exports = coreInterface => {
 			componentsData = readComponentsData(coreInterface);
 		}
 
-		if(componentsData.size == 0 || !body.components || !Array.isArray(body.components) || body.components.length == 0) {
+		if(!componentsData
+		|| componentsData.size == 0
+		|| !body.components
+		|| !Array.isArray(body.components)
+		|| body.components.length == 0) {
 			return null;
 		}
 

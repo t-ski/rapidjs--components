@@ -104,7 +104,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 
 /**
  * Retrieve a component class name reference (e.g. for accessing static members).
- * @param {String} name Component name
+ * @param {String} name Component (tag) name
  * @returns {Class} Component class reference
  */
  plugin.component = name => {

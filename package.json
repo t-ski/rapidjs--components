@@ -1,12 +1,21 @@
 {
-  "name": "rapidjs--components",
+  "name": "@t-ski/rapidjs--components",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/app.js",
+  "description": "rapidJS plug-in providing ...",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "node ./src/app.js",
-    "test": "./node_modules/.bin/eslint --fix src/"
+    "start": "node ./dist/app.js",
+    "test": "./node_modules/.bin/eslint --fix src/",
+    "build": "npm run test && node ../../finalize-js/build.js",
+    "release": "npm run build && np"
   },
+  "keywords": [
+    "rapidjs",
+    "plug-in"
+  ],
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/t-ski/rapidjs--components.git"
@@ -19,5 +28,8 @@
   "homepage": "https://github.com/t-ski/rapidjs--components#readme",
   "devDependencies": {
     "eslint": "^7.21.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
