@@ -19,7 +19,7 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData;
 
-function readComponentsData(coreInterface) {
+function readComponentData(coreInterface, component) {
 	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifiers", "components");
 	const applyResponseModifiers = (extension, data) => {
 		return (useResponseModifier === true) ? coreInterface.applyResponseModifiers(extension, data): data;
@@ -175,7 +175,7 @@ function readComponentsData(coreInterface) {
 
 	let componentsDirPath = coreInterface.getFromConfig("componentsDirPath");
 	if(!componentsDirPath) {
-		coreInterface.output.log("No components directory path given in config file ('rapid.config.json'.'components'.'componentsDirPath')");
+		coreInterface.output.log(`No components directory path given in config file ("components.componentsDirPath")`);
 		
 		return;
 	}
@@ -186,53 +186,37 @@ function readComponentsData(coreInterface) {
 		return;
 	}
 
-	let data = new Map();
+	const componentDirPath = join(componentsDirPath, component, `_${component}`);
+
+	const markup = retrieveComponentSubData(componentDirPath, "html");
+	if(!markup) {
+		coreInterface.output.log(`Skipping render of '${component}' component as mandatory markup file does not exist or is empty`);
+		return;
+	}
+
+	let style = retrieveComponentSubData(componentDirPath, "css");
+	!style && (style = retrieveComponentSubData(componentDirPath, "scss")); // Try SCSS if no related CSS file found
+
+	let script = retrieveComponentSubData(componentDirPath, "js", false);
+	if(script) {
+		script = translateScript(script);
+		script.native = applyResponseModifiers("js", script.native);
+		script.loadHandler && (script.loadHandler = applyResponseModifiers("js", script.loadHandler));
+	}
 	
-	readdirSync(componentsDirPath, {
-		withFileTypes: true
-	})
-		.filter(dirent => (dirent.isDirectory() && /^[a-z0-9_-]+$/i.test(dirent.name)))
-		.forEach(dir => {
-			const name = dir.name.toLowerCase();
-			if(data.has(name)) {
-				return;	// Do not read duplicates and components with extremely long name
-			}
+	const data = {
+		markup: markup,
+		style: style,
+		script: script
+	};
 
-			// Process each component as present in file system
-			const componentDirPath = join(componentsDirPath, name, `_${name}`);
-        
-			const markup = retrieveComponentSubData(componentDirPath, "html");
-			if(!markup) {
-				coreInterface.output.log(`Skipping render of '${name}' component as mandatory markup file does not exist or is empty`);
-				return;
-			}
-
-			let style = retrieveComponentSubData(componentDirPath, "css");
-			!style && (style = retrieveComponentSubData(componentDirPath, "scss")); // Try SCSS if no related CSS file found
-
-			let script = retrieveComponentSubData(componentDirPath, "js", false);
-			if(script) {
-				script = translateScript(script);
-				script.native = applyResponseModifiers("js", script.native);
-				script.loadHandler && (script.loadHandler = applyResponseModifiers("js", script.loadHandler));
-			}
-			
-			const subData = {
-				markup: markup,
-				style: style,
-				script: script
-			};
-
-			if(Object.keys(subData).length === 0) {
-				return;
-			}
-
-			data.set(name.toLowerCase(), subData);
-		});
+	if(Object.keys(data).length === 0) {
+		return;
+	}
 
 	return data;
 
-	// TODO: Minify?
+	// TODO: Provide minification option (as script might not work with conventional minification algorithms)?
 }
 
 // TODO: Implement apply response modifier disable directive for single files?
@@ -241,38 +225,41 @@ function readComponentsData(coreInterface) {
 module.exports = coreInterface => {
 	coreInterface.initFrontendModule(config);
 
-	// TODO: Add invisible element to component instance wrapping elements to already reserve space?
+	// TODO: Add invisible element to component instance wrapping elements to reserve space nbefore styles have loaded?
 	
+	const cache = coreInterface.createCache();
+
 	// Add POST route to retrieve specific content
 	coreInterface.setRoute("post", config.requestEndpoint, body => {
-		if(coreInterface.isDevMode || !componentsData) {
-			// Read components data on first request as readers and finalizers would not be set up on initial read
-			componentsData = readComponentsData(coreInterface);
-		}
-
-		if(!componentsData
-		|| componentsData.size == 0
-		|| !body.components
+		if(!body.components
 		|| !Array.isArray(body.components)
 		|| body.components.length == 0) {
 			return null;
 		}
-
-		let selectedComponentsData = {};
+		
+		const data = {};
 		Array.from(new Set(body.components))
 			.filter(component => {
 				return (component.length <= config.maxTagNameLength);
 			})
 			.map(component => component.trim().toLowerCase())
 			.forEach(component => {
-				const data = componentsData.get(component);
-				if(!data) {
-					return;
+				let subData;
+				if(cache.has(component)) {
+					subData = cache.read(pathname);
+				} else {
+					subData = readComponentData(coreInterface, component);
+
+					if(!subData) {
+						return;
+					}
+
+					cache.write(component, subData);
 				}
 
-				selectedComponentsData[component] = data;
+				data[component] = subData;
 			});
 
-		return selectedComponentsData;
+		return data;
 	});
 };
