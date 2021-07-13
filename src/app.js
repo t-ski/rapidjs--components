@@ -12,11 +12,8 @@ const config = {
 	shadowRootAlias: "COMPONENT"
 };
 
-const {existsSync, readdirSync, readFileSync} = require("fs");
+const {existsSync, readFileSync} = require("fs");
 const {join} = require("path");
-
-// Components data object containing each component in a map.
-let componentsData;
 
 function readComponentData(rapidJS, component) {
 	/**
@@ -25,7 +22,7 @@ function readComponentData(rapidJS, component) {
      * @param {String} extension File extension to read
      * @returns {Object} Component file data object
      */
-	const retrieveComponentSubData = (componentDirPath, extension, useResponseModifier = true) => {
+	const retrieveComponentSubData = (componentDirPath, extension) => {
 		const subPath = `${componentDirPath}.${extension}`;
 		if(existsSync(subPath)) {
 			let data;
@@ -168,7 +165,7 @@ function readComponentData(rapidJS, component) {
 
 	let componentsDirPath = rapidJS.readConfig("componentsDirPath");
 	if(!componentsDirPath) {
-		rapidJS.output.log(`No components directory path given in config file ("components.componentsDirPath")`);
+		rapidJS.output.log("No components directory path given in config file (\"components.componentsDirPath\")");
 		
 		return;
 	}
@@ -237,7 +234,7 @@ module.exports = rapidJS => {
 			.forEach(component => {
 				let subData;
 				if(cache.has(component)) {
-					subData = cache.read(pathname);
+					subData = cache.read(component);
 				} else {
 					subData = readComponentData(rapidJS, component);
 
