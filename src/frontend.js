@@ -38,7 +38,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 	document.head.appendChild(hideStyleElement);
 	
 	// Request collected component related data
-	RAPID.core.post(config.requestEndpoint, {
+	rapidJS.core.useEndpoint({
 		components: componentInstances.map(component => component.replace(new RegExp(`^${config.instanceIndicator}`), ""))	// Send names without instance prefix
 	})
 		.then(res => res.json())
@@ -107,7 +107,7 @@ window.MutationObserver || window.WebKitMutationObserver;
  * @param {String} name Component (tag) name
  * @returns {Class} Component class reference
  */
-plugin.component = name => {
+PUBLIC.component = name => {
 	name = name.replace(new RegExp(`^${config.instanceIndicator}`), "");
 	return componentClassReferences.get(name.toLowerCase());
 };

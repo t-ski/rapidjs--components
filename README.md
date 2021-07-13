@@ -1,11 +1,11 @@
-# rapidjs--components
+# components
 
 <a href="https://rapidjs.org"><img src="https://rapidjs.org/_assets/readme-plugin-badge.svg" height="75"></a>
 
 Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
 
 ```
-npm install rapidjs--components
+npm install components
 ```
 
 ## Concept
@@ -16,7 +16,7 @@ The plug-in provides an abstraction wrapper around the [web components standard]
 
 ## Specific component directory
 
-Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator **rapidjs--**. All component files inside of a component directory must be named just like the respective component directory.
+Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator ****. All component files inside of a component directory must be named just like the respective component directory.
 
 ## Markup file
 
@@ -24,7 +24,7 @@ A file (.html) stating standard markup to compose the component's blackboxed int
 
 ### Slotted content
 
-To tell the custom component where to place inner HTML passed to a related instance, use slot tags. The slotted content behaviour and any related functionality (such as styling slotted elements) completely resembles the standard behaviour.\
+To tell the custom component where to place inner HTML passed to a related instance, use slot tags. The slotted content behavior and any related functionality (such as styling slotted elements) completely resembles the standard behavior.\
 \
 Read more about [component markup and slots](https://www.webcomponents.org/specs#the-shadow-dom-specification).
 
@@ -94,16 +94,6 @@ State the respective name and a callback getting passed the attribute value prio
 
 ---
 
-## Apply response modifiers
-
-By default, response modifiers that have been set up on the core environment will not affect component files. To enable response modification for component files, set the following parameter in the web configuration file to `true`:
-
-``` json
-"plug-ins.components.applyResponseModifiers": true
-```
-
----
-
 ## General components directory
 
 All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
@@ -121,7 +111,7 @@ Sometimes it might be helpful to have a reference to a component class, e.g. for
 #### Syntax
 
 ```
- plugin.component(name)
+ PUBLIC.component(name)
 ```
 
 #### Parameter

@@ -6,10 +6,9 @@
 
 const config = {
 	componentNamePrefix: "RapidComponent_",
-	hideStyleElementId: "rapidjs--hide",
+	hideStyleElementId: "hide",
 	instanceIndicator: "component--",
 	maxTagNameLength: 250,
-	requestEndpoint: "/_components",
 	shadowRootAlias: "COMPONENT"
 };
 
@@ -19,17 +18,11 @@ const {join} = require("path");
 // Components data object containing each component in a map.
 let componentsData;
 
-function readComponentData(coreInterface, component) {
-	const useResponseModifier = coreInterface.getFromConfig("applyResponseModifiers", "components");
-	const applyResponseModifiers = (extension, data) => {
-		return (useResponseModifier === true) ? coreInterface.applyResponseModifiers(extension, data): data;
-	};
-
+function readComponentData(rapidJS, component) {
 	/**
      * Retrieve file contents of a certain component file from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
-     * @param {Boolean} [applyResponseModifiers=true] Whether to apply response modifier
      * @returns {Object} Component file data object
      */
 	const retrieveComponentSubData = (componentDirPath, extension, useResponseModifier = true) => {
@@ -37,7 +30,7 @@ function readComponentData(coreInterface, component) {
 		if(existsSync(subPath)) {
 			let data;
 			try {
-				data = String(coreInterface.applyReader(extension, subPath));
+				data = String(rapidJS.useReader(extension, subPath));
 			} catch(err) {
 				if(err !== 404) {
 					throw err;
@@ -50,7 +43,7 @@ function readComponentData(coreInterface, component) {
 				return null;
 			}
 
-			return useResponseModifier ? applyResponseModifiers(extension, data) : data;
+			return data;
 		}
 		return null;
 	};
@@ -173,15 +166,15 @@ function readComponentData(coreInterface, component) {
 		};
 	};
 
-	let componentsDirPath = coreInterface.getFromConfig("componentsDirPath");
+	let componentsDirPath = rapidJS.readConfig("componentsDirPath");
 	if(!componentsDirPath) {
-		coreInterface.output.log(`No components directory path given in config file ("components.componentsDirPath")`);
+		rapidJS.output.log(`No components directory path given in config file ("components.componentsDirPath")`);
 		
 		return;
 	}
-	componentsDirPath = join(coreInterface.webPath, componentsDirPath);
+	componentsDirPath = join(rapidJS.webPath, componentsDirPath);
 	if(!existsSync(componentsDirPath)) {
-		coreInterface.output.log(`Components directory as given in config file not found '${componentsDirPath}'`);
+		rapidJS.output.log(`Components directory as given in config file not found '${componentsDirPath}'`);
 
 		return;
 	}
@@ -190,7 +183,7 @@ function readComponentData(coreInterface, component) {
 
 	const markup = retrieveComponentSubData(componentDirPath, "html");
 	if(!markup) {
-		coreInterface.output.log(`Skipping render of '${component}' component as mandatory markup file does not exist or is empty`);
+		rapidJS.output.log(`Skipping render of '${component}' component as mandatory markup file does not exist or is empty`);
 		return;
 	}
 
@@ -200,8 +193,6 @@ function readComponentData(coreInterface, component) {
 	let script = retrieveComponentSubData(componentDirPath, "js", false);
 	if(script) {
 		script = translateScript(script);
-		script.native = applyResponseModifiers("js", script.native);
-		script.loadHandler && (script.loadHandler = applyResponseModifiers("js", script.loadHandler));
 	}
 	
 	const data = {
@@ -222,15 +213,15 @@ function readComponentData(coreInterface, component) {
 // TODO: Implement apply response modifier disable directive for single files?
 // TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
 
-module.exports = coreInterface => {
-	coreInterface.initFrontendModule(config);
+module.exports = rapidJS => {
+	rapidJS.initFrontendModule("./frontend", config);
 
 	// TODO: Add invisible element to component instance wrapping elements to reserve space nbefore styles have loaded?
 	
-	const cache = coreInterface.createCache();
+	const cache = rapidJS.createCache();
 
 	// Add POST route to retrieve specific content
-	coreInterface.setRoute("post", config.requestEndpoint, body => {
+	rapidJS.setEndpoint(body => {
 		if(!body.components
 		|| !Array.isArray(body.components)
 		|| body.components.length == 0) {
@@ -248,7 +239,7 @@ module.exports = coreInterface => {
 				if(cache.has(component)) {
 					subData = cache.read(pathname);
 				} else {
-					subData = readComponentData(coreInterface, component);
+					subData = readComponentData(rapidJS, component);
 
 					if(!subData) {
 						return;
