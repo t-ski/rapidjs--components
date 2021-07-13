@@ -10,17 +10,17 @@ npm install components
 
 ## Concept
 
-The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the HTML element set. I.e. web components are to be used just like ordinary HTML elements.
+The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the *HTML* element set. I.e. web components are to be used just like ordinary *HTML* elements.
 
 ---
 
 ## Specific component directory
 
-Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator ****. All component files inside of a component directory must be named just like the respective component directory.
+Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator `component-`. All component files inside of a component directory must be named just like the respective component directory.
 
 ## Markup file
 
-A file (.html) stating standard markup to compose the component's blackboxed interface. A component markup file is required in order to receive a working component.
+A file (*.html*) stating standard markup to compose the component's blackboxed interface. A component markup file is required in order to receive a working component.
 
 ### Slotted content
 
@@ -30,9 +30,9 @@ Read more about [component markup and slots](https://www.webcomponents.org/specs
 
 ## Styles file
 
-Optionally, a styles file (.css) may be set up to give individual styling to the provided markup.\
+Optionally, a styles file (*.css*) may be set up to give individual styling to the provided markup.\
 \
-The plug-in also works with.scss files instead, utilizing a respectively set up explicit reader to transpile SCSS to browser-valid CSS code. Do ot use SCSS for styling if no transpilation mechanism (explicit reader or response modifier) has been set up.
+The plug-in also works with.scss files instead, utilizing a respectively set up explicit reader to transpile *SCSS* to browser-valid *CSS* code. Do ot use *SCSS* for styling if no transpilation mechanism (explicit reader or response modifier) has been set up.
 
 ## Script file
 
@@ -99,7 +99,7 @@ State the respective name and a callback getting passed the attribute value prio
 All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
 
 ``` json
-"plug-ins.components.componentsDirPath": "./_components"
+"plug-in.components.componentsDirPath": "./_components"
 ```
 
 ---
