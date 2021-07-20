@@ -5,12 +5,12 @@
 Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
 
 ```
-npm install components
+npm install @t-ski/rapidjs--components
 ```
 
 ## Concept
 
-The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the *HTML* element set. I.e. web components are to be used just like ordinary *HTML* elements.
+The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the HTML element set. I.e. web components are to be used just like ordinary HTML elements.
 
 ---
 
@@ -121,3 +121,7 @@ Sometimes it might be helpful to have a reference to a component class, e.g. for
 #### Return value
 
 `Class` *Component class reference*
+
+## Best practices
+
+[Hiding component instances with noscript elements in order to visually intercept no-script-environments](https://gist.github.com/t-ski/a51394acb91dc04103e104597b17b3a8)
