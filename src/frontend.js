@@ -38,10 +38,9 @@ window.MutationObserver || window.WebKitMutationObserver;
 	document.head.appendChild(hideStyleElement);
 	
 	// Request collected component related data
-	rapidJS.core.useEndpoint({
+	rapidJS.useEndpoint({
 		components: componentInstances.map(component => component.replace(new RegExp(`^${config.instanceIndicator}`), ""))	// Send names without instance prefix
 	})
-		.then(res => res.json())
 		.then(components => {
 		// Implement components accordingly
 			for(let name in components) {
@@ -96,6 +95,8 @@ window.MutationObserver || window.WebKitMutationObserver;
 					}
 				}, 25);
 			}
+		}).catch(err => {
+			// ...
 		});
 })).observe(document, {
 	subtree: true,

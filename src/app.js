@@ -12,12 +12,11 @@ const config = {
 	shadowRootAlias: "COMPONENT"
 };
 
-const {existsSync} = require("fs");
 const {join} = require("path");
 
 function readComponentData(rapidJS, component) {
 	/**
-     * Retrieve file contents of a certain component file from a given directory.
+     * Retrieve file contents of a certain component filåe from a given directory.
      * @param {String} componentDirPath Component direcotry path
      * @param {String} extension File extension to read
      * @returns {Object} Component file data object
@@ -26,11 +25,9 @@ function readComponentData(rapidJS, component) {
 		const subPath = `${componentDirPath}.${extension}`;
 		let data;
 		try {
-			data = String(rapidJS.utility.useReader(extension, subPath));
+			data = String(rapidJS.readFile(subPath));
 		} catch(err) {
-			if(err !== 404) {
-				throw err;
-			}
+			console.error(err);
 
 			return null;
 		}
@@ -160,16 +157,10 @@ function readComponentData(rapidJS, component) {
 		};
 	};
 
-	let componentsDirPath = rapidJS.utility.readConfig("componentsDirPath");
+	let componentsDirPath = rapidJS.readConfig("componentsDirPath");
 	if(!componentsDirPath) {
-		rapidJS.utility.output.log("No components directory path given in config file (\"components.componentsDirPath\")");
+		console.log("No components directory path given in config file (\"components.componentsDirPath\")");
 		
-		return;
-	}
-	componentsDirPath = join(rapidJS.utility.webPath, componentsDirPath);
-	if(!existsSync(componentsDirPath)) {
-		rapidJS.utility.output.log(`Components directory as given in config file not found '${componentsDirPath}'`);
-
 		return;
 	}
 
@@ -177,13 +168,12 @@ function readComponentData(rapidJS, component) {
 
 	const markup = retrieveComponentSubData(componentDirPath, "html");
 	if(!markup) {
-		rapidJS.utility.output.log(`Skipping render of '${component}' component as mandatory markup file does not exist or is empty`);
+		console.log(`Skipping render of '${component}' component as mandatory markup file does not exist or is empty`);
 		return;
 	}
 
 	let style = retrieveComponentSubData(componentDirPath, "css");
-	!style && (style = retrieveComponentSubData(componentDirPath, "scss")); // Try SCSS if no related CSS file found
-
+	
 	let script = retrieveComponentSubData(componentDirPath, "js", false);
 	if(script) {
 		script = translateScript(script);
@@ -212,7 +202,7 @@ module.exports = rapidJS => {
 
 	// TODO: Add invisible element to component instance wrapping elements to reserve space nbefore styles have loaded?
 	
-	const cache = rapidJS.utility.createCache();
+	const cache = rapidJS.createCache();
 
 	// Add POST route to retrieve specific content
 	rapidJS.setEndpoint(body => {
@@ -231,7 +221,7 @@ module.exports = rapidJS => {
 			.forEach(component => {
 				let subData;
 				if(cache.has(component)) {
-					subData = cache.read(component);
+					subData = cache.readFile(component);
 				} else {
 					subData = readComponentData(rapidJS, component);
 
@@ -244,7 +234,7 @@ module.exports = rapidJS => {
 
 				data[component] = subData;
 			});
-
+		
 		return data;
 	});
 };
