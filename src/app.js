@@ -25,7 +25,7 @@ function readComponentData(rapidJS, component) {
 		const subPath = `${componentDirPath}.${extension}`;
 		let data;
 		try {
-			data = String(rapidJS.readFile(subPath));
+			data = String(rapidJS.file.read(subPath));
 		} catch(err) {
 			console.error(err);
 
@@ -221,7 +221,7 @@ module.exports = rapidJS => {
 			.forEach(component => {
 				let subData;
 				if(cache.has(component)) {
-					subData = cache.readFile(component);
+					subData = cache.read(component);
 				} else {
 					subData = readComponentData(rapidJS, component);
 
@@ -236,5 +236,5 @@ module.exports = rapidJS => {
 			});
 		
 		return data;
-	});
+	}, true);
 };

@@ -11,7 +11,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 	mutations.forEach(mutation => {
 		mutation.addedNodes.forEach(node => {
 			if(node.tagName && (node.tagName.length > config.maxTagNameLength)	// Do not process components with extremely long (tag) names
-			|| !(new RegExp(`^${config.instanceIndicator}[a-z0-9_-]+$`, "i")).test(node.tagName)) {
+			|| !(new RegExp(`^${config.instanceIndicator}[a-z0-9_-]+$`, "i")).test(node.tagName)) {
 				return;
 			}
 			componentInstances.add(node.tagName.toLowerCase());
@@ -95,7 +95,7 @@ window.MutationObserver || window.WebKitMutationObserver;
 					}
 				}, 25);
 			}
-		}).catch(err => {
+		}).catch(_ => {
 			// ...
 		});
 })).observe(document, {
