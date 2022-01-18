@@ -25,7 +25,7 @@ function readComponentData(rapidJS, component) {
 		const subPath = `${componentDirPath}.${extension}`;
 		let data;
 		try {
-			data = String(rapidJS.file.read(subPath));
+			data = rapidJS.file.read(subPath);
 		} catch(err) {
 			console.error(err);
 
@@ -35,7 +35,7 @@ function readComponentData(rapidJS, component) {
 		if(data.length == 0) {
 			return null;
 		}
-
+		
 		return data;
 	};
 	/**
@@ -157,7 +157,7 @@ function readComponentData(rapidJS, component) {
 		};
 	};
 
-	let componentsDirPath = rapidJS.readConfig("componentsDirPath");
+	const componentsDirPath = $this.pluginConfig.componentsDirPath;
 	if(!componentsDirPath) {
 		console.log("No components directory path given in config file (\"components.componentsDirPath\")");
 		
@@ -198,21 +198,22 @@ function readComponentData(rapidJS, component) {
 // TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
 
 module.exports = rapidJS => {
-	rapidJS.initFrontendModule("./frontend", config);
+	$this.clientModule("./client", config);
 
 	// TODO: Add invisible element to component instance wrapping elements to reserve space nbefore styles have loaded?
 	
-	const cache = rapidJS.createCache();
-
-	// Add POST route to retrieve specific content
-	rapidJS.setEndpoint(body => {
-		if(!body.components
+	const cache = new rapidJS.Cache();
+	
+	// Add endpoint for component data retrieval
+	$this.endpoint(body => {
+		if(!body || !body.components
 		|| !Array.isArray(body.components)
 		|| body.components.length == 0) {
 			return null;
 		}
-		
+
 		const data = {};
+
 		Array.from(new Set(body.components))
 			.filter(component => {
 				return (component.length <= config.maxTagNameLength);

@@ -7,8 +7,7 @@
     "extends": "eslint:recommended",
     "globals": {
         "rapidJS": "readonly",
-        "config": "readonly",
-        "PUBLIC": true
+        "$this": "readonly"
     },
     "parserOptions": {
         "ecmaVersion": 12,

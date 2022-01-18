@@ -1,6 +1,6 @@
 # components
 
-<a href="https://rapidjs.org"><img src="https://rapidjs.org/_assets/readme-plugin-badge.svg" height="75"></a>
+<a href="https://rapidjs.org"><img src="https://rapidjs.org/assets/readme-plugin-badge.svg" height="75"></a>
 
 Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
 
@@ -98,8 +98,8 @@ State the respective name and a callback getting passed the attribute value prio
 
 All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
 
-``` json
-"plug-in.components.componentsDirPath": "./_components"
+``` js
+"plug-in"."components"."componentsDirPath": "./_components"
 ```
 
 ---
