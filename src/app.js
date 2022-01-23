@@ -5,14 +5,12 @@
  */
 
 const config = {
-	componentNamePrefix: "RapidComponent_",
-	hideStyleElementId: "hide",
-	instanceIndicator: "component--",
-	maxTagNameLength: 250,
-	shadowRootAlias: "COMPONENT"
+	maxTagNameLength: 250
 };
 
+
 const {join} = require("path");
+
 
 function readComponentData(rapidJS, component) {
 	/**
@@ -198,7 +196,7 @@ function readComponentData(rapidJS, component) {
 // TODO: Introduce directives (e.g. for disabling a feature on a certain page)?
 
 module.exports = rapidJS => {
-	$this.clientModule("./client", config);
+	$this.clientModule("./client");
 
 	// TODO: Add invisible element to component instance wrapping elements to reserve space nbefore styles have loaded?
 	
@@ -221,7 +219,7 @@ module.exports = rapidJS => {
 			.map(component => component.trim().toLowerCase())
 			.forEach(component => {
 				let subData;
-				if(cache.has(component)) {
+				if(cache.exists(component)) {
 					subData = cache.read(component);
 				} else {
 					subData = readComponentData(rapidJS, component);
