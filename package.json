@@ -1,6 +1,6 @@
 {
   "name": "@t-ski/rapidjs--components",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "rapidJS plug-in providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents. ",
   "main": "dist/app.js",
   "scripts": {
