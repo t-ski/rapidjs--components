@@ -46,20 +46,20 @@ window.MutationObserver || window.WebKitMutationObserver;
 	$this.endpoint({
 		components: componentInstances.map(component => component.replace(new RegExp(`^${config.instanceIndicator}`), ""))	// Send names without instance prefix
 	})
-	.then(components => {
-	// Implement components accordingly
-		for(let name in components) {
-			const component = components[name];
-			const instanceName = `${config.instanceIndicator}${name}`;
+		.then(components => {
+			// Implement components accordingly
+			for(let name in components) {
+				const component = components[name];
+				const instanceName = `${config.instanceIndicator}${name}`;
 
-			const template = document.createElement("template");
-			template.innerHTML = `${component.style ? `<style>${component.style}</style>` : ""}${component.markup}`;
+				const template = document.createElement("template");
+				template.innerHTML = `${component.style ? `<style>${component.style}</style>` : ""}${component.markup}`;
 
-			document.head.appendChild(template);
+				document.head.appendChild(template);
 			
-			const className = `${config.componentNamePrefix}${components.size}`;
-			try {
-				eval(`
+				const className = `${config.componentNamePrefix}${components.size}`;
+				try {
+					eval(`
 					class ${className} extends HTMLElement {
 						constructor() {
 							super();
@@ -73,36 +73,36 @@ window.MutationObserver || window.WebKitMutationObserver;
 					customElements.define("${instanceName}", ${className});
 				`);
 				
-				// Call component load handler if provided
-				component.script.loadHandler && window.eval(component.script.loadHandler);
-			} catch(err) {
+					// Call component load handler if provided
+					component.script.loadHandler && window.eval(component.script.loadHandler);
+				} catch(err) {
 				// TODO: Improve error messages (parse backend-side?)
-				console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
-			}
-		}
-
-		// Remove hide style element as component styles all loaded
-		// Use timeout as no there is no way to check if styles already passed, but small delay common?
-		//setTimeout(_ => { 
-		document.head.removeChild(document.head.querySelector(`style#${config.hideStyleElementId}`));
-		//}, 0);
-
-		// Scroll to anchor if given (as dimensions changed)
-		if(document.location.hash) {
-			const anchorElement = document.querySelector(`#${document.location.hash.replace(/^#/, "")}`);
-
-			let i = 0;
-			const anchorScrollInterval = setInterval(_ => {
-				anchorElement.scrollIntoView();
-				i++;
-				if(i >= 10) {
-					clearInterval(anchorScrollInterval);
+					console.error(new EvalError(`An error occurred creating a component:\n"${err.message}" at '_${name}.js'`));
 				}
-			}, 25);
-		}
-	}).catch(_ => {
+			}
+
+			// Remove hide style element as component styles all loaded
+			// Use timeout as no there is no way to check if styles already passed, but small delay common?
+			//setTimeout(_ => { 
+			document.head.removeChild(document.head.querySelector(`style#${config.hideStyleElementId}`));
+			//}, 0);
+
+			// Scroll to anchor if given (as dimensions changed)
+			if(document.location.hash) {
+				const anchorElement = document.querySelector(`#${document.location.hash.replace(/^#/, "")}`);
+
+				let i = 0;
+				const anchorScrollInterval = setInterval(_ => {
+					anchorElement.scrollIntoView();
+					i++;
+					if(i >= 10) {
+						clearInterval(anchorScrollInterval);
+					}
+				}, 25);
+			}
+		}).catch(_ => {
 		// ...
-	});
+		});
 })).observe(document, {
 	subtree: true,
 	childList: true
