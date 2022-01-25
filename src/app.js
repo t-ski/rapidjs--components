@@ -98,13 +98,13 @@ function readComponentData(rapidJS, component) {
 		script = script.replace(/((^|([^\\]))\/\/.*)|((^|[^\\])\/\*((?!\*\/)(\s|.))*(\*\/)?)/g, "$3");
 
 		// Translate lifecycle methods
-		for(let key in scriptTranslation.lifecycle) {
+		for(const key in scriptTranslation.lifecycle) {
 			script = script.replace(new RegExp(`(^|\\s)${scriptTranslation.lifecyclePrefix}${scriptTranslation.lifecycle[key]}\\s*\\(`, "g"), `$1${key}(`);
 		}
 
 		// Translate attribute change listeners
 		let listenerCases = "";
-		let listenedAttributes = [];
+		const listenedAttributes = [];
 		let startIndex;
 		while((startIndex = script.search(new RegExp(`(^|\\s)${scriptTranslation.attributeChangedCallback.name}\\s*\\(`))) > -1) {    // TODO: Extend regex?
 			const listener = extractBlock(script, startIndex);
@@ -170,7 +170,7 @@ function readComponentData(rapidJS, component) {
 		return;
 	}
 
-	let style = retrieveComponentSubData(componentDirPath, "css");
+	const style = retrieveComponentSubData(componentDirPath, "css");
 	
 	let script = retrieveComponentSubData(componentDirPath, "js", false);
 	if(script) {

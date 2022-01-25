@@ -2,7 +2,7 @@
 
 <a href="https://rapidjs.org"><img src="https://rapidjs.org/assets/readme-plugin-badge.svg" height="75"></a>
 
-Providing abstract web components functionality for creating individual, self-contained elements to be reused among markup documents.
+Custom web components as self-contained elements via code unit decoupled source files.
 
 ```
 npm install @t-ski/rapidjs--components
@@ -10,17 +10,37 @@ npm install @t-ski/rapidjs--components
 
 ## Concept
 
-The plug-in provides an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications), thus inducing a simplified usage environment. Effectively, a valid web component represents an extension of the HTML element set. I.e. web components are to be used just like ordinary HTML elements.
+The Plug-in implements an abstraction wrapper around the [web components standard](https://www.webcomponents.org/introduction#specifications). Effectively, a valid web component represents an extension of the HTML element set, i.e. it can be used just like an ordinary HTML element.
 
----
+## Component specific directory
 
-## Specific component directory
+Each component is to be organized within its own directory containing the files relevant for construction. The directory name corresponds to the element name. All component files inside of a component directory must be named just like the respective component directory, but marked private.
 
-Each component is to be organized in its own directory containing component related files. The directory name corresponds to the tag name the component is to be instanciated within web page markup, prefixed by the rapidJS component indicator `component-`. All component files inside of a component directory must be named just like the respective component directory.
+## Component collection directory
+
+All component specific directories are to be placed in a surrounding, dedicated components directory. It is mandatory to define the path to that directory in the Plug-in config file as follows: 
+
+``` js
+"@t-ski/rapidjs--components"."componentsDirPath": <path-to-directory>
+```
+
+## Markup instances
+
+As pointed out, a custom web component behaves just like ordinary HTML elements. Thus a component can be instanciated within a web page's markup placing a respective tag: Give the component name prefixed by the mandatory component indicator `component--`.
+
+#### Example
+
+``` html
+<body>
+	<component--weather degree="32"></component--weather>
+</body>
+```
+
+> Custom components strictly represent non-singleton elements.
 
 ## Markup file
 
-A file (*.html*) stating standard markup to compose the component's blackboxed interface. A component markup file is required in order to receive a working component.
+A file `.html` stating standard markup to compose the component's blackboxed interface. A component markup file is required in order to receive a working component.
 
 ### Slotted content
 
@@ -28,11 +48,9 @@ To tell the custom component where to place inner HTML passed to a related insta
 \
 Read more about [component markup and slots](https://www.webcomponents.org/specs#the-shadow-dom-specification).
 
-## Styles file
+## Style file
 
-Optionally, a styles file (*.css*) may be set up to give individual styling to the provided markup.\
-\
-The plug-in also works with.scss files instead, utilizing a respectively set up explicit reader to transpile *SCSS* to browser-valid *CSS* code. Do ot use *SCSS* for styling if no transpilation mechanism (explicit reader or response modifier) has been set up.
+Optionally, a styles file `.css` may be set up to give individual styling to the provided markup.
 
 ## Script file
 
@@ -50,78 +68,68 @@ Act upon lifecycle events by intercepting them in orde to run a custom script in
 
 #### Events
 
-`connected`     *Fires once a component instance has been connected to the DOM*
-
-`disconnected`  *Fires once a component instance has been disconnected from the DOM*
-
-`moved`         *Fires once a component instance has been moved*
-
-#### Connected
-
-Fires once a component instance has been connected to the DOM.
+| Name		       | Description |
+| ---------------- | ---------- |
+| **connected**    | *Fires once a component instance has been connected to the DOM* |
+| **disconnected** | *Fires once a component instance has been disconnected from the DOM* |
+| **moved**        | *Fires once a component instance has been moved* |
 
 ### Methods
 
 Methods are to be created by simply giving a name followed by an argument list and the function scoped body:
 
 ``` js
-methodName(arguments) {
+<method-name>(<arguments>) {
     // Custom script
 }
 ```
 
-Any method is publicly accessible from and bound to component instance objects.
+> Any method is publicly accessible from component instances (reference).
 
-### this keyword
+### `this` context
 
-The keyword `this` within lifecycle event interceptors and methods gives a reference to the related compoenent instance.
+The keyword `this` (accessibl from lifecycle event and method bodys) gives a reference to the related compoenent instance.
 
 ### Component DOM
 
-In order to manipulate the component specific DOM constructed based on the component markup, use the `COMPONENT`identifier on a related instance (e.g. `this.COMPONENT.querySelector("button").style.display = "block";`).
+In order to manipulate the component specific DOM constructed based on the component markup, use the `COMPONENT` identifier on a related instance.
+
+#### Example
+
+``` js
+this.COMPONENT.querySelector("button").style.display = "block";
+```
 
 ### Attribute change listeners
 
-As the graphical interface of a component instance might depend on its attribute values, listening to attribute changes can be achieved using attribute change listeners by the following concept:
+As the graphical interface of a component instance might depend on its attribute values, listening to attribute changes can be achieved using attribute change listeners by the following concept.
 
 ``` js
-addChangeListener("attrbute-name", (oldValue, newValue) => {
+addChangeListener("<attrbute-name>", (oldValue, newValue) => {
     // Custom script
 });
 ```
 
-State the respective name and a callback getting passed the attribute value prior to and after the change to be triggered upon each attribute change.
+### Retrieve component class reference
 
----
-
-## General components directory
-
-All component specific directories are to be placed in a dedicated components directory. Define the path to that directory in the components feature specific configuration file scope as follows: 
-
-``` js
-"plug-in"."components"."componentsDirPath": "./_components"
-```
-
----
-
-## Retrieve component class reference
-
-Sometimes it might be helpful to have a reference to a component class, e.g. for accessing static members. The component interface provides a way to retrieve a certain reference.
+Sometimes it might be helpful to obtain a reference to the component class (e.g. for accessing static members). The component interface provides the `component()` method to retrieve a certain reference.
 
 #### Syntax
 
-```
- PUBLIC.component(name)
+``` js
+rapidJS["@t-ski/rapidjs--components"].component(name)
 ```
 
 #### Parameter
 
-**name** `String`   *Component (tag) name*
+| Name	   | Type     | Description |
+| -------- | -------- | ----------- |
+| **name** | `String` | *Component (tag) name* |
 
 #### Return value
 
 `Class` *Component class reference*
 
-## Best practices
+## Further reading
 
-[Hiding component instances with noscript elements in order to visually intercept no-script-environments](https://gist.github.com/t-ski/a51394acb91dc04103e104597b17b3a8)
+- Hiding component instances with noscript elements in order to visually intercept no-script-environments: https://gist.github.com/t-ski/a51394acb91dc04103e104597b17b3a8
